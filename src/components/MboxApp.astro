@@ -2,9 +2,13 @@
 // src/components/MboxApp.astro
 ---
 <section id="mbox-app" class="max-w-7xl mx-auto p-4">
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
-    <strong>100% Local &amp; Offline-Safe</strong>
-    <span>Zero bytes uploaded. Disconnect Wi-Fi before dropping a file to verify.</span>
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
+    <div class="flex items-center gap-2">
+      <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+      <strong>100% Client-Side &amp; Tracker-Free:</strong>
+      <span>Your emails are parsed locally in your browser. Zero uploads, zero ad trackers. Disconnect Wi-Fi to verify.</span>
+    </div>
+    <span class="text-xs text-emerald-700">Open-source Postal-MIME Web Worker</span>
   </div>
 
   <!-- Dropzone -->
@@ -12,56 +16,117 @@
     id="dropzone"
     class="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-10 text-center transition hover:border-blue-500"
   >
-    <input id="file-input" type="file" accept=".mbox,.mbx,.eml,.txt,.zip,.gz" class="hidden" />
-    <p class="text-lg font-semibold text-slate-800">Drop your .mbox file here (up to 50GB+)</p>
-    <p class="mt-1 text-sm text-slate-500">Google Takeout, Thunderbird, Apple Mail — processed locally in your browser</p>
+    <input id="file-input" type="file" accept=".mbox,.mbx,.eml,.txt,.zip,.gz,.tgz" class="hidden" />
+    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+    <p class="mt-3 text-lg font-semibold text-slate-800">Drop your .mbox file here</p>
+    <p class="mt-1 text-sm text-slate-500">Supports Google Takeout, Mozilla Thunderbird, and Apple Mail archives</p>
+  </div>
+
+  <!-- 3-Step Google Takeout Visual Workflow -->
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-lg p-3">
+    <div class="flex items-start gap-2">
+      <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span>
+      <div>
+        <strong class="text-slate-800 block">Download Takeout ZIP</strong>
+        <span>Google delivers archives as <code>takeout-*.zip</code>.</span>
+      </div>
+    </div>
+    <div class="flex items-start gap-2">
+      <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span>
+      <div>
+        <strong class="text-slate-800 block">Extract Archive on Your PC</strong>
+        <span>Right-click &rarr; Extract All (browsers cannot random-seek compressed ZIPs).</span>
+      </div>
+    </div>
+    <div class="flex items-start gap-2">
+      <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span>
+      <div>
+        <strong class="text-slate-800 block">Drop the .mbox File</strong>
+        <span>Navigate to <code>Takeout/Mail/All mail.mbox</code> and drop it above.</span>
+      </div>
+    </div>
   </div>
 
   <!-- ZIP / GZIP Warning Banner -->
   <div id="zip-warning" class="mt-4 hidden rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-    <strong>Google Takeout Archive Detected:</strong> You dropped a compressed ZIP/GZIP file.
-    Extract it first, then drop the <code>.mbox</code> file from <code>Takeout/Mail/</code> here.
+    <div class="font-bold">Google Takeout Archive Detected (.zip / .tgz)</div>
+    <p class="mt-1">
+      You dropped a compressed archive. Modern browsers cannot stream-decompress multi-gigabyte ZIP/TGZ files with random access without exhausting device memory.
+    </p>
+    <p class="mt-2 font-medium">
+      &rarr; Please unzip the download on your device first, open the <code>Takeout/Mail/</code> folder, and drop the <code>.mbox</code> file here.
+    </p>
   </div>
 
-  <!-- Progress Bar -->
-  <div id="progress-wrap" class="mt-4 hidden">
-    <div class="flex justify-between text-xs text-slate-600 mb-1">
-      <span id="progress-label">Scanning...</span>
+  <!-- Scan / Index Progress Bar -->
+  <div id="progress-wrap" class="mt-4 hidden rounded-lg border border-slate-200 bg-white p-4">
+    <div class="flex justify-between text-xs text-slate-700 mb-1.5 font-medium">
+      <span id="progress-label">Scanning email boundaries...</span>
       <span id="progress-pct">0%</span>
     </div>
-    <div class="h-2 w-full rounded bg-slate-200 overflow-hidden">
-      <div id="progress-bar" class="h-full bg-blue-600 transition-all" style="width:0%"></div>
+    <div class="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+      <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-150" style="width:0%"></div>
+    </div>
+    <div id="progress-details" class="mt-1.5 text-[11px] text-slate-500">0 MB processed</div>
+  </div>
+
+  <!-- Deep Search Progress Bar (Tier 2 Progressive Scan) -->
+  <div id="search-progress-wrap" class="mt-3 hidden rounded-lg border border-blue-200 bg-blue-50 p-3">
+    <div class="flex items-center justify-between text-xs text-blue-900 mb-1">
+      <span id="search-progress-label">Searching email bodies...</span>
+      <button id="btn-cancel-search" class="text-xs font-semibold text-blue-700 hover:text-red-600 underline cursor-pointer">
+        Cancel Search (Esc)
+      </button>
+    </div>
+    <div class="h-2 w-full rounded-full bg-blue-200 overflow-hidden">
+      <div id="search-progress-bar" class="h-full bg-blue-600 transition-all duration-150" style="width:0%"></div>
+    </div>
+    <div id="search-progress-details" class="mt-1 flex justify-between text-[11px] text-blue-700">
+      <span id="search-bytes-stat">0 MB / 0 MB scanned</span>
+      <span id="search-matches-stat">0 matches</span>
     </div>
   </div>
 
   <!-- Viewer Split Pane -->
   <div id="viewer" class="mt-6 hidden grid grid-cols-1 gap-4 lg:grid-cols-12">
-    <aside class="lg:col-span-4 flex flex-col border rounded-lg bg-white h-[75vh]">
-      <div class="p-3 border-b">
-        <input
-          id="search-input"
-          type="search"
-          placeholder="Filter subject, sender, date..."
-          class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm"
-        />
-        <div id="count-label" class="mt-1 text-xs text-slate-500">0 emails</div>
+    <!-- Left Sidebar: Email List & Search -->
+    <aside class="lg:col-span-4 flex flex-col border border-slate-200 rounded-lg bg-white h-[75vh] shadow-sm">
+      <div class="p-3 border-b border-slate-200 space-y-2">
+        <div class="relative">
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Filter subject/sender... (Press Enter to deep-search body)"
+            class="w-full rounded border border-slate-300 px-3 py-1.5 text-sm pr-8 focus:border-blue-500 focus:outline-none"
+          />
+          <button id="btn-deep-search" title="Deep Search Email Bodies" class="absolute right-1.5 top-1.5 text-xs text-slate-400 hover:text-blue-600 cursor-pointer">
+            🔍
+          </button>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span id="count-label">0 emails</span>
+          <span id="search-mode-indicator" class="text-[11px] text-slate-400">Header filter</span>
+        </div>
       </div>
       <div id="email-list" class="flex-1 overflow-y-auto divide-y divide-slate-100"></div>
     </aside>
 
-    <main class="lg:col-span-8 flex flex-col border rounded-lg bg-white h-[75vh]">
-      <div id="email-header" class="border-b p-4 hidden">
+    <!-- Right Main: Reading Pane -->
+    <main class="lg:col-span-8 flex flex-col border border-slate-200 rounded-lg bg-white h-[75vh] shadow-sm">
+      <div id="email-header" class="border-b border-slate-200 p-4 hidden">
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h2 id="view-subject" class="text-lg font-bold text-slate-900"></h2>
-            <p id="view-from" class="text-xs text-slate-600 mt-1"></p>
+          <div class="max-w-[70%]">
+            <h2 id="view-subject" class="text-base font-bold text-slate-900 break-words"></h2>
+            <p id="view-from" class="text-xs text-slate-600 mt-1 break-words"></p>
             <p id="view-date" class="text-xs text-slate-400"></p>
           </div>
-          <div class="flex gap-2">
-            <button id="btn-remote-img" class="rounded border px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer">
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-remote-img" class="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer">
               Load Remote Images
             </button>
-            <button id="btn-download-eml" class="rounded border px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer">
+            <button id="btn-download-eml" class="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer">
               Download .EML
             </button>
             <button id="btn-print" class="rounded bg-slate-900 px-2.5 py-1 text-xs text-white hover:bg-slate-700 cursor-pointer">
@@ -71,16 +136,22 @@
         </div>
         <div id="attachments-bar" class="mt-3 flex flex-wrap gap-2"></div>
       </div>
-      <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white"></iframe>
+      <div id="email-loading" class="hidden flex-1 flex items-center justify-center text-sm text-slate-400">
+        Loading email content...
+      </div>
+      <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white border-0"></iframe>
     </main>
+  </div>
+
+  <!-- Ethical Disclosure -->
+  <div class="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
+    ViewMBOX is 100% tracker-free and does not serve behavioral ad network scripts on private email views.
   </div>
 </section>
 
 <script>
-  // Inline worker into bundle so it works 100% offline with zero network fetch
   import MboxWorker from '../workers/mbox-worker.ts?worker&inline';
-  import type { EmailIndexItem } from '../workers/mbox-worker';
-  import { renderEmailFromSlice, downloadRawEml } from '../lib/email-renderer';
+  import type { EmailIndexItem, AttachmentMeta } from '../workers/mbox-worker';
 
   const dropzone = document.getElementById('dropzone')!;
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -89,20 +160,43 @@
   const progressBar = document.getElementById('progress-bar')!;
   const progressLabel = document.getElementById('progress-label')!;
   const progressPct = document.getElementById('progress-pct')!;
+  const progressDetails = document.getElementById('progress-details')!;
+
+  const searchProgressWrap = document.getElementById('search-progress-wrap')!;
+  const searchProgressBar = document.getElementById('search-progress-bar')!;
+  const searchProgressLabel = document.getElementById('search-progress-label')!;
+  const searchBytesStat = document.getElementById('search-bytes-stat')!;
+  const searchMatchesStat = document.getElementById('search-matches-stat')!;
+  const btnCancelSearch = document.getElementById('btn-cancel-search')!;
+
   const viewer = document.getElementById('viewer')!;
   const emailList = document.getElementById('email-list')!;
   const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const btnDeepSearch = document.getElementById('btn-deep-search')!;
   const countLabel = document.getElementById('count-label')!;
+  const searchModeIndicator = document.getElementById('search-mode-indicator')!;
+
   const emailHeader = document.getElementById('email-header')!;
+  const emailLoading = document.getElementById('email-loading')!;
   const emailFrame = document.getElementById('email-frame') as HTMLIFrameElement;
   const attachmentsBar = document.getElementById('attachments-bar')!;
 
   let worker: Worker | null = null;
   let currentFile: File | null = null;
   let allEmails: EmailIndexItem[] = [];
+  let visibleEmails: EmailIndexItem[] = [];
   let selectedEmail: EmailIndexItem | null = null;
+  let isDeepSearching = false;
+
+  function formatBytes(bytes: number): string {
+    if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes >= 1024) return Math.round(bytes / 1024) + ' KB';
+    return bytes + ' B';
+  }
 
   async function isCompressedArchive(file: File): Promise<boolean> {
+    if (file.name.endsWith('.zip') || file.name.endsWith('.gz') || file.name.endsWith('.tgz')) return true;
     const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
     const isZip = head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
     const isGzip = head[0] === 0x1f && head[1] === 0x8b;
@@ -110,23 +204,27 @@
   }
 
   function renderList(items: EmailIndexItem[]) {
+    visibleEmails = items;
     countLabel.textContent = `${items.length.toLocaleString()} emails`;
-    // Render first 300 rows at a time to keep DOM instant
     const slice = items.slice(0, 300);
     const frag = document.createDocumentFragment();
 
     for (const item of slice) {
       const btn = document.createElement('button');
-      btn.className = 'w-full text-left p-3 hover:bg-blue-50 focus:bg-blue-50 transition cursor-pointer';
+      btn.className =
+        'w-full text-left p-3 hover:bg-blue-50 focus:bg-blue-50 transition cursor-pointer border-b border-slate-100 last:border-0';
+      if (selectedEmail && selectedEmail.id === item.id) {
+        btn.classList.add('bg-blue-50', 'border-l-4', 'border-l-blue-600');
+      }
       btn.innerHTML = `
-        <div class="truncate text-sm font-semibold text-slate-900"></div>
-        <div class="truncate text-xs text-slate-600 mt-0.5"></div>
-        <div class="truncate text-[11px] text-slate-400 mt-0.5"></div>
+        <div class="truncate text-xs font-semibold text-slate-900"></div>
+        <div class="truncate text-[11px] text-slate-600 mt-0.5"></div>
+        <div class="truncate text-[10px] text-slate-400 mt-0.5"></div>
       `;
-      btn.children[0].textContent = item.subject;
-      btn.children[1].textContent = item.from;
-      btn.children[2].textContent = item.date;
-      btn.onclick = () => openEmail(item, false);
+      btn.children[0].textContent = item.subject || '(No Subject)';
+      btn.children[1].textContent = item.from || '(Unknown Sender)';
+      btn.children[2].textContent = item.date || '';
+      btn.onclick = () => requestRenderEmail(item, false);
       frag.appendChild(btn);
     }
 
@@ -134,27 +232,93 @@
     emailList.appendChild(frag);
   }
 
-  async function openEmail(item: EmailIndexItem, allowRemoteImages: boolean) {
-    if (!currentFile) return;
+  function requestRenderEmail(item: EmailIndexItem, allowRemoteImages: boolean) {
+    if (!currentFile || !worker) return;
     selectedEmail = item;
-    const rendered = await renderEmailFromSlice(currentFile, item.start, item.end, allowRemoteImages);
+    emailHeader.classList.add('hidden');
+    emailLoading.classList.remove('hidden');
 
+    worker.postMessage({
+      type: 'RENDER_EMAIL',
+      file: currentFile,
+      emailId: item.id,
+      start: item.start,
+      end: item.end,
+      allowRemoteImages,
+    });
+  }
+
+  function handleEmailRendered(msg: any) {
+    emailLoading.classList.add('hidden');
     emailHeader.classList.remove('hidden');
-    document.getElementById('view-subject')!.textContent = rendered.subject;
-    document.getElementById('view-from')!.textContent = `From: ${rendered.from}`;
-    document.getElementById('view-date')!.textContent = rendered.date;
 
+    document.getElementById('view-subject')!.textContent = msg.subject;
+    document.getElementById('view-from')!.textContent = `From: ${msg.from}`;
+    document.getElementById('view-date')!.textContent = msg.date;
+
+    // Attachments (Metadata only, lazy binary extraction on click)
     attachmentsBar.innerHTML = '';
-    for (const att of rendered.attachments) {
-      const a = document.createElement('a');
-      a.href = att.url;
-      a.download = att.filename;
-      a.className = 'rounded bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200';
-      a.textContent = `📎 ${att.filename} (${Math.max(1, Math.round(att.size / 1024))} KB)`;
-      attachmentsBar.appendChild(a);
+    for (const att of (msg.attachments as AttachmentMeta[]) || []) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className =
+        'rounded bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1';
+      btn.textContent = `📎 ${att.filename} (${formatBytes(att.size)})`;
+      btn.onclick = () => downloadAttachment(att.id, att.filename);
+      attachmentsBar.appendChild(btn);
     }
 
-    emailFrame.srcdoc = rendered.srcdoc;
+    emailFrame.srcdoc = msg.srcdoc;
+  }
+
+  function downloadAttachment(attachmentIndex: number, filename: string) {
+    if (!currentFile || !selectedEmail || !worker) return;
+    worker.postMessage({
+      type: 'GET_ATTACHMENT',
+      file: currentFile,
+      start: selectedEmail.start,
+      end: selectedEmail.end,
+      attachmentIndex,
+    });
+  }
+
+  function downloadRawEml() {
+    if (!currentFile || !selectedEmail) return;
+    const blob = currentFile.slice(selectedEmail.start, selectedEmail.end, 'message/rfc822');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = (selectedEmail.subject || 'email').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60);
+    a.href = url;
+    a.download = `${safeName}.eml`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function triggerDeepSearch() {
+    const q = searchInput.value.trim();
+    if (!q || !currentFile || !worker || allEmails.length === 0) return;
+
+    isDeepSearching = true;
+    searchModeIndicator.textContent = 'Deep Body Search';
+    searchProgressWrap.classList.remove('hidden');
+    searchProgressBar.style.width = '0%';
+    searchBytesStat.textContent = `0 MB / ${formatBytes(currentFile.size)} scanned`;
+    searchMatchesStat.textContent = '0 matches';
+
+    worker.postMessage({
+      type: 'DEEP_SEARCH',
+      file: currentFile,
+      query: q,
+      items: allEmails,
+    });
+  }
+
+  function cancelDeepSearch() {
+    if (!worker) return;
+    worker.postMessage({ type: 'ABORT' });
+    isDeepSearching = false;
+    searchProgressWrap.classList.add('hidden');
+    searchModeIndicator.textContent = 'Header filter';
   }
 
   async function handleFile(file: File) {
@@ -167,19 +331,23 @@
     if (worker) worker.terminate();
     currentFile = file;
     allEmails = [];
+    visibleEmails = [];
     selectedEmail = null;
 
     progressWrap.classList.remove('hidden');
     viewer.classList.remove('hidden');
     progressBar.style.width = '0%';
+    progressLabel.textContent = `Scanning ${file.name}...`;
 
     worker = new MboxWorker();
     worker.onmessage = (e: MessageEvent) => {
       const msg = e.data;
+
       if (msg.type === 'PROGRESS') {
         progressLabel.textContent = `Scanning ${file.name} (${msg.found.toLocaleString()} emails found)...`;
         progressPct.textContent = `${msg.percent}%`;
         progressBar.style.width = `${msg.percent}%`;
+        progressDetails.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} indexed`;
       } else if (msg.type === 'BATCH') {
         allEmails.push(...msg.items);
         progressLabel.textContent = `Indexing headers (${allEmails.length.toLocaleString()})...`;
@@ -189,13 +357,41 @@
       } else if (msg.type === 'DONE') {
         progressWrap.classList.add('hidden');
         renderList(allEmails);
-        if (allEmails.length > 0) openEmail(allEmails[0], false);
+        if (allEmails.length > 0) requestRenderEmail(allEmails[0], false);
+      } else if (msg.type === 'EMAIL_RENDERED') {
+        handleEmailRendered(msg);
+      } else if (msg.type === 'ATTACHMENT_READY') {
+        const blob = new Blob([msg.buffer], { type: msg.mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = msg.filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else if (msg.type === 'SEARCH_PROGRESS') {
+        searchProgressBar.style.width = `${msg.percent}%`;
+        searchBytesStat.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} scanned (${msg.percent}%)`;
+        searchMatchesStat.textContent = `${msg.matchedIds.length} matches`;
+        const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
+        renderList(hits);
+      } else if (msg.type === 'SEARCH_DONE') {
+        isDeepSearching = false;
+        searchProgressWrap.classList.add('hidden');
+        const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
+        renderList(hits);
+      } else if (msg.type === 'SEARCH_ABORTED') {
+        isDeepSearching = false;
+        searchProgressWrap.classList.add('hidden');
+      } else if (msg.type === 'ERROR') {
+        alert(msg.message);
+        progressWrap.classList.add('hidden');
       }
     };
 
     worker.postMessage({ type: 'INDEX', file });
   }
 
+  // Dropzone events
   dropzone.onclick = () => fileInput.click();
   fileInput.onchange = () => fileInput.files?.[0] && handleFile(fileInput.files[0]);
   dropzone.ondragover = (e) => e.preventDefault();
@@ -205,8 +401,11 @@
     if (f) handleFile(f);
   };
 
+  // Instant Header Filter on keystroke
   searchInput.oninput = () => {
+    if (isDeepSearching) cancelDeepSearch();
     const q = searchInput.value.trim().toLowerCase();
+    searchModeIndicator.textContent = 'Header filter';
     if (!q) return renderList(allEmails);
     const filtered = allEmails.filter(
       (m) =>
@@ -217,13 +416,28 @@
     renderList(filtered);
   };
 
+  // Enter triggers Deep Body Search
+  searchInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerDeepSearch();
+    } else if (e.key === 'Escape') {
+      cancelDeepSearch();
+    }
+  };
+
+  btnDeepSearch.onclick = () => triggerDeepSearch();
+  btnCancelSearch.onclick = () => cancelDeepSearch();
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
+  });
+
   document.getElementById('btn-remote-img')!.onclick = () => {
-    if (selectedEmail) openEmail(selectedEmail, true);
+    if (selectedEmail) requestRenderEmail(selectedEmail, true);
   };
   document.getElementById('btn-download-eml')!.onclick = () => {
-    if (currentFile && selectedEmail) {
-      downloadRawEml(currentFile, selectedEmail.start, selectedEmail.end, selectedEmail.subject);
-    }
+    downloadRawEml();
   };
   document.getElementById('btn-print')!.onclick = () => {
     emailFrame.contentWindow?.print();

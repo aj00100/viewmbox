@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import PostalMime from 'postal-mime';
 
 export interface EmailIndexItem {
   id: number;
@@ -7,6 +8,13 @@ export interface EmailIndexItem {
   subject: string;
   from: string;
   date: string;
+}
+
+export interface AttachmentMeta {
+  id: number;
+  filename: string;
+  mimeType: string;
+  size: number;
 }
 
 const CHUNK_SIZE = 16 * 1024 * 1024; // 16 MB
@@ -76,18 +84,48 @@ async function parseQuickHeaders(
   };
 }
 
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  const chunkSize = 8192;
+  for (let i = 0; i < len; i += chunkSize) {
+    const sub = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, sub as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
+function decodeQuotedPrintable(str: string): string {
+  return str
+    .replace(/=\r?\n/g, '') // strip soft linebreaks
+    .replace(/=([0-9A-Fa-f]{2})/g, (_m, hex) => {
+      try {
+        return String.fromCharCode(parseInt(hex, 16));
+      } catch {
+        return _m;
+      }
+    });
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 let activeAbort = false;
 
 self.onmessage = async (e: MessageEvent) => {
-  const { type, file, query, items } = e.data;
+  const data = e.data;
+  const { type } = data;
 
   if (type === 'ABORT') {
     activeAbort = true;
     return;
   }
 
-  if (type === 'INDEX' && file instanceof File) {
+  // 1. FILE INDEXING
+  if (type === 'INDEX' && data.file instanceof File) {
     activeAbort = false;
+    const file = data.file;
     const fileSize = file.size;
     const boundaries: number[] = [];
     let offset = 0;
@@ -135,9 +173,16 @@ self.onmessage = async (e: MessageEvent) => {
       self.postMessage({
         type: 'PROGRESS',
         stage: 'scanning',
+        scannedBytes: Math.min(fileSize, offset),
+        totalBytes: fileSize,
         percent: Math.min(100, Math.round((offset / fileSize) * 100)),
         found: boundaries.length,
       });
+    }
+
+    if (boundaries.length === 0) {
+      self.postMessage({ type: 'ERROR', message: 'No valid RFC 4155 email headers found in this file.' });
+      return;
     }
 
     // Build lightweight header index in batches of 200
@@ -167,29 +212,184 @@ self.onmessage = async (e: MessageEvent) => {
     self.postMessage({ type: 'DONE', total: boundaries.length });
   }
 
-  // Optional Deep Body Search (streams on demand, never on keystroke)
-  if (type === 'DEEP_SEARCH' && file instanceof File && Array.isArray(items)) {
+  // 2. PARSE & RENDER EMAIL IN WORKER (Zero Main-Thread Jank)
+  if (type === 'RENDER_EMAIL' && data.file instanceof File) {
+    try {
+      const { file, start, end, allowRemoteImages } = data;
+      const rawBuffer = await file.slice(start, end).arrayBuffer();
+      const parser = new PostalMime();
+      const email = await parser.parse(rawBuffer);
+
+      const cidMap = new Map<string, string>();
+      const attachmentsMeta: AttachmentMeta[] = [];
+
+      for (let i = 0; i < (email.attachments || []).length; i++) {
+        const att = email.attachments[i];
+        const isInline = Boolean(att.contentId);
+        const size = att.content ? att.content.byteLength : 0;
+
+        // Inline images under 5MB -> data: URI for seamless srcdoc rendering without CORS or opaque origin issues
+        if (isInline && att.content && size < 5 * 1024 * 1024) {
+          const base64 = uint8ArrayToBase64(new Uint8Array(att.content));
+          const mime = att.mimeType || 'image/png';
+          const cleanCid = att.contentId.replace(/^<|>$/g, '');
+          cidMap.set(cleanCid, `data:${mime};base64,${base64}`);
+        } else {
+          // Regular or large attachments: SEND METADATA ONLY! Do not transfer raw binary!
+          attachmentsMeta.push({
+            id: i,
+            filename: att.filename || `attachment_${i + 1}.bin`,
+            mimeType: att.mimeType || 'application/octet-stream',
+            size,
+          });
+        }
+      }
+
+      let bodyHtml = email.html
+        ? email.html
+        : `<pre style="white-space:pre-wrap;font-family:system-ui,sans-serif;">${escapeHtml(
+            email.text || '(Empty message)'
+          )}</pre>`;
+
+      // Rewrite cid: inline images to data: URIs
+      for (const [cid, dataUri] of cidMap.entries()) {
+        const escapedCid = cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        bodyHtml = bodyHtml.replace(new RegExp(`cid:${escapedCid}`, 'gi'), dataUri);
+      }
+
+      // CSP: only allow data: images by default; allow remote https: only if user explicitly toggled
+      const imgSrc = allowRemoteImages ? 'data: https: http:' : 'data:';
+      const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src ${imgSrc}; font-src data:;`;
+
+      const srcdoc = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="${csp}" />
+  <style>
+    body { margin: 16px; font-family: system-ui, -apple-system, sans-serif; color: #111827; line-height: 1.5; word-wrap: break-word; }
+    img { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>${bodyHtml}</body>
+</html>`;
+
+      const fromStr = email.from
+        ? `${email.from.name ? `${email.from.name} ` : ''}<${email.from.address || ''}>`
+        : '(Unknown)';
+      const toStr = (email.to || [])
+        .map((t) => `${t.name ? `${t.name} ` : ''}<${t.address || ''}>`)
+        .join(', ');
+
+      self.postMessage({
+        type: 'EMAIL_RENDERED',
+        emailId: data.emailId,
+        subject: email.subject || '(No Subject)',
+        from: fromStr,
+        to: toStr,
+        date: email.date || '',
+        srcdoc,
+        attachments: attachmentsMeta,
+      });
+    } catch (err: any) {
+      self.postMessage({
+        type: 'EMAIL_RENDER_ERROR',
+        message: err?.message || 'Failed to render email',
+      });
+    }
+  }
+
+  // 3. LAZY ATTACHMENT EXTRACTION (Binary decoded ONLY when clicked)
+  if (type === 'GET_ATTACHMENT' && data.file instanceof File) {
+    try {
+      const { file, start, end, attachmentIndex } = data;
+      const rawBuffer = await file.slice(start, end).arrayBuffer();
+      const parser = new PostalMime();
+      const email = await parser.parse(rawBuffer);
+      const att = email.attachments?.[attachmentIndex];
+
+      if (!att || !att.content) {
+        throw new Error('Attachment content not found');
+      }
+
+      // Transfer ArrayBuffer with 0-copy to main thread
+      const buffer = att.content;
+      self.postMessage(
+        {
+          type: 'ATTACHMENT_READY',
+          filename: att.filename || 'attachment.bin',
+          mimeType: att.mimeType || 'application/octet-stream',
+          buffer,
+        },
+        [buffer]
+      );
+    } catch (err: any) {
+      self.postMessage({
+        type: 'ATTACHMENT_ERROR',
+        message: err?.message || 'Failed to download attachment',
+      });
+    }
+  }
+
+  // 4. ON-DEMAND BODY SEARCH (Tier 2 Progressive Scan with QP decoding & cancellation)
+  if (type === 'DEEP_SEARCH' && data.file instanceof File && Array.isArray(data.items)) {
     activeAbort = false;
-    const needle = String(query || '').toLowerCase();
+    const file = data.file;
+    const items: EmailIndexItem[] = data.items;
+    const needle = String(data.query || '').toLowerCase().trim();
     const matchedIds: number[] = [];
+    const totalBytes = file.size;
+    let scannedBytes = 0;
 
     for (let i = 0; i < items.length; i++) {
-      if (activeAbort) return;
-      const item: EmailIndexItem = items[i];
-      // Skip >15MB raw attachments during text search to keep it fast
-      const readLen = Math.min(item.end - item.start, 2 * 1024 * 1024);
-      const text = await file.slice(item.start, item.start + readLen).text();
-      if (text.toLowerCase().includes(needle)) {
-        matchedIds.push(item.id);
+      if (activeAbort) {
+        self.postMessage({ type: 'SEARCH_ABORTED', matchedIds });
+        return;
       }
-      if (i % 100 === 0 || i === items.length - 1) {
+
+      const item = items[i];
+      const emailLen = item.end - item.start;
+      scannedBytes += emailLen;
+
+      // Header matches already?
+      if (
+        item.subject.toLowerCase().includes(needle) ||
+        item.from.toLowerCase().includes(needle) ||
+        item.date.toLowerCase().includes(needle)
+      ) {
+        matchedIds.push(item.id);
+      } else {
+        // Read text slice (cap reading at 2MB per email to skip giant binary blocks)
+        const readLen = Math.min(emailLen, 2 * 1024 * 1024);
+        const rawBuf = await file.slice(item.start, item.start + readLen).arrayBuffer();
+        const rawText = latin1Decoder.decode(rawBuf);
+
+        // Normalize text: decode Quoted-Printable soft breaks and hex bytes so "in=0D=0Avoice" matches "invoice"
+        const decodedText = decodeQuotedPrintable(rawText).toLowerCase();
+
+        if (decodedText.includes(needle)) {
+          matchedIds.push(item.id);
+        }
+      }
+
+      // Emit progress updates every 50 emails or at the end
+      if (i % 50 === 0 || i === items.length - 1) {
         self.postMessage({
           type: 'SEARCH_PROGRESS',
-          percent: Math.round(((i + 1) / items.length) * 100),
-          matchedIds,
+          scannedBytes,
+          totalBytes,
+          current: i + 1,
+          total: items.length,
+          percent: Math.min(100, Math.round(((i + 1) / items.length) * 100)),
+          matchedIds: [...matchedIds],
         });
       }
     }
-    self.postMessage({ type: 'SEARCH_DONE', matchedIds });
+
+    self.postMessage({
+      type: 'SEARCH_DONE',
+      matchedIds,
+      totalScanned: items.length,
+    });
   }
 };
