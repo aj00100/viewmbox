@@ -193,13 +193,13 @@
               <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               <span>Download PDF</span>
             </button>
+            <button id="btn-print" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer" title="Print physical copy or Save as PDF via browser print spooler">
+              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+              <span>Print</span>
+            </button>
             <button id="btn-download-eml" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer">
               <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               <span>Save .EML</span>
-            </button>
-            <button id="btn-print" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer">
-              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              <span>Print</span>
             </button>
             <button id="btn-remote-img" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer">
               <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -390,23 +390,24 @@
 
     emailFrame.srcdoc = msg.srcdoc;
     logStatus(`Viewing email #${(msg.emailId ?? 0) + 1}: ${msg.subject}`);
+    preparePrintArea(msg);
+  }
 
-    // Pre-populate dedicated print container and activate print media mode
+  function preparePrintArea(email: any) {
     const printArea = document.getElementById('print-area');
-    if (printArea) {
-      printArea.innerHTML = `
-        <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
-          <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(msg.subject)}</h1>
-          <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(msg.from)}</div>
-          ${msg.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(msg.to)}</div>` : ''}
-          <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(msg.date)}</div>
-        </div>
-        <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
-          ${msg.bodyHtml}
-        </div>
-      `;
-      document.body.classList.add('has-print-content');
-    }
+    if (!printArea) return;
+    printArea.innerHTML = `
+      <div id="print-email-header" style="border-bottom: 1px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 16px;">
+        <h1 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(email.subject)}</h1>
+        <div style="font-size: 12px; color: #475569; margin-bottom: 2px;"><strong>From:</strong> ${escapeHtml(email.from)}</div>
+        ${email.to ? `<div style="font-size: 12px; color: #475569; margin-bottom: 2px;"><strong>To:</strong> ${escapeHtml(email.to)}</div>` : ''}
+        <div style="font-size: 12px; color: #475569;"><strong>Date:</strong> ${escapeHtml(email.date)}</div>
+      </div>
+      <div id="print-email-body" style="font-size: 13px; line-height: 1.5; color: #1e293b;">
+        ${email.bodyHtml}
+      </div>
+    `;
+    document.body.classList.add('has-print-content');
   }
 
   function downloadAttachment(attachmentIndex: number, filename: string) {
@@ -643,11 +644,33 @@
     if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
   });
 
+  function triggerPrintToPdf() {
+    if (!currentRenderedEmail) {
+      showError('Please select an email first before printing.');
+      return;
+    }
+    preparePrintArea(currentRenderedEmail);
+    logStatus(`Opening Print spooler to Save as PDF for: ${currentRenderedEmail.subject}`);
+    window.print();
+  }
+
   function downloadEmailPdf() {
     if (!currentRenderedEmail || !worker) {
       showError('Please select an email first before downloading PDF.');
       return;
     }
+
+    // Detect CJK / non-Latin characters (Japanese, Chinese, Cyrillic, Arabic, etc.)
+    // Standard PDF fonts (Helvetica) cannot encode these and turn them into ????
+    const sample = `${currentRenderedEmail.subject} ${currentRenderedEmail.text || ''}`;
+    const hasUnicode = /[^\x00-\x7F\xA0-\xFF]/.test(sample);
+
+    if (hasUnicode) {
+      logStatus('Japanese/Unicode characters detected. Opening native print spooler to Save as PDF without distortion...');
+      triggerPrintToPdf();
+      return;
+    }
+
     logStatus(`Generating PDF for "${currentRenderedEmail.subject}"...`);
     worker.postMessage({
       type: 'GENERATE_PDF',
@@ -669,29 +692,7 @@
   document.getElementById('btn-download-pdf')!.onclick = () => {
     downloadEmailPdf();
   };
-
-  // Dedicated print container: 100% immune to iframe cross-origin SecurityErrors and UI leakage
   document.getElementById('btn-print')!.onclick = () => {
-    if (!currentRenderedEmail) {
-      showError('Please select an email first before printing.');
-      return;
-    }
-    const printArea = document.getElementById('print-area');
-    if (printArea) {
-      printArea.innerHTML = `
-        <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
-          <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(currentRenderedEmail.subject)}</h1>
-          <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(currentRenderedEmail.from)}</div>
-          ${currentRenderedEmail.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(currentRenderedEmail.to)}</div>` : ''}
-          <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(currentRenderedEmail.date)}</div>
-        </div>
-        <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
-          ${currentRenderedEmail.bodyHtml}
-        </div>
-      `;
-      document.body.classList.add('has-print-content');
-    }
-    logStatus(`Opening Print preview for: ${currentRenderedEmail.subject}`);
-    window.print();
+    triggerPrintToPdf();
   };
 </script>
