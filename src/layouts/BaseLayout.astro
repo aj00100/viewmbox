@@ -34,9 +34,9 @@ const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
   <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900">
     <div id="site-wrapper" class="min-h-screen flex flex-col">
       <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <a href="/" class="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-slate-900 hover:opacity-90 transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <a href="/" class="flex items-center gap-2.5 text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 hover:opacity-90 transition">
               <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-500 text-white shadow-sm ring-1 ring-blue-700/20">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -44,18 +44,64 @@ const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
               </span>
               <span>ViewMBOX<span class="text-blue-600">.com</span></span>
             </a>
-            <span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-600/20">
+            <span class="hidden lg:inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-600/20">
               <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               100% Client-Side &bull; Zero Uploads
             </span>
           </div>
 
-          <nav class="flex flex-wrap items-center gap-1 sm:gap-4 text-sm font-medium text-slate-600">
-            <a href="/how-to-open-google-takeout-mbox-files/" class="rounded-lg px-2.5 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">Takeout Guide</a>
-            <a href="/mbox-vs-eml/" class="rounded-lg px-2.5 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">MBOX vs EML</a>
-            <a href="/how-to-extract-attachments-from-mbox/" class="rounded-lg px-2.5 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">Extract Attachments</a>
-            <a href="/about/" class="rounded-lg px-2.5 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">About</a>
+          <!-- Desktop Navigation Links -->
+          <nav class="hidden md:flex items-center gap-1 sm:gap-2 text-sm font-medium text-slate-600">
+            <a href="/how-to-open-google-takeout-mbox-files/" class="rounded-lg px-3 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">Takeout Guide</a>
+            <a href="/mbox-vs-eml/" class="rounded-lg px-3 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">MBOX vs EML</a>
+            <a href="/how-to-extract-attachments-from-mbox/" class="rounded-lg px-3 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">Extract Attachments</a>
+            <a href="/about/" class="rounded-lg px-3 py-1.5 hover:text-slate-900 hover:bg-slate-100 transition">About</a>
           </nav>
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <div class="flex items-center md:hidden">
+            <button
+              id="mobile-menu-btn"
+              type="button"
+              class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer"
+              aria-label="Toggle Navigation"
+              aria-expanded="false"
+            >
+              <svg id="hamburger-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg id="close-icon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200/80 bg-white/98 backdrop-blur-md px-4 py-3 space-y-1 shadow-lg">
+          <a href="/how-to-open-google-takeout-mbox-files/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+            <svg class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            <span>Takeout Guide</span>
+          </a>
+          <a href="/mbox-vs-eml/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+            <svg class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+            <span>MBOX vs EML</span>
+          </a>
+          <a href="/how-to-extract-attachments-from-mbox/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+            <svg class="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+            <span>Extract Attachments</span>
+          </a>
+          <a href="/about/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+            <svg class="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>About</span>
+          </a>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between px-3 text-xs text-slate-500">
+            <span class="inline-flex items-center gap-1.5 font-medium text-emerald-700">
+              <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              100% In-Browser Privacy
+            </span>
+            <span>Zero Server Uploads</span>
+          </div>
         </div>
       </header>
 
@@ -125,5 +171,38 @@ const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
         </div>
       </footer>
     </div>
+
+    <script>
+      const btn = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      const hamburger = document.getElementById('hamburger-icon');
+      const close = document.getElementById('close-icon');
+
+      if (btn && menu && hamburger && close) {
+        btn.addEventListener('click', () => {
+          const isOpen = !menu.classList.contains('hidden');
+          if (isOpen) {
+            menu.classList.add('hidden');
+            hamburger.classList.remove('hidden');
+            close.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+          } else {
+            menu.classList.remove('hidden');
+            hamburger.classList.add('hidden');
+            close.classList.remove('hidden');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+
+        menu.querySelectorAll('a').forEach((link) => {
+          link.addEventListener('click', () => {
+            menu.classList.add('hidden');
+            hamburger.classList.remove('hidden');
+            close.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+    </script>
   </body>
 </html>
