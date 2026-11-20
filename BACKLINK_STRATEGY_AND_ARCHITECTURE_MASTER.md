@@ -161,3 +161,66 @@ npx wrangler pages deploy dist --project-name=viewmbox
 
 # Set custom domain in Cloudflare Pages Dashboard: viewmbox.com
 ```
+
+---
+
+## Part 6: Live Empirical Proof & 3-Phase Execution Roadmap
+
+### 1. Forensic Verification: The YouTuber's Real In-Content Link
+Curling `https://realonlineruler.com/` confirmed the exact mechanics the YouTuber used to rank `fontfinderai.com`:
+
+```html
+<!-- Live HTML extracted from realonlineruler.com: -->
+<p>
+  Designers and developers use pixel mode to check spacing, margins and element sizes 
+  directly in the browser. Physical units help confirm that printed materials and 
+  on-screen mockups will come out at their intended size. 
+  When a mockup arrives as a flat image, you can pair the ruler with a 
+  <a href="https://fontfinderai.com">font finder</a> 
+  to identify the typeface before measuring its cap height and line spacing.
+</p>
+```
+* **Pure Dofollow:** Zero `rel="nofollow"` or `rel="sponsored"` attributes.
+* **Exact-Match Anchor:** `<a href="...">font finder</a>` matches the primary target head term.
+* **Contextual Justification:** Seamlessly integrated into an editorial paragraph explaining why a designer needs both tools.
+
+### 2. Forensic Verification: The i18n Subfolder Model
+Curling `https://fontfinderai.com/` confirmed 7 localized language routes (`/es/`, `/de/`, `/fr/`, `/it/`, `/pt/`, `/ja/`, `/ko/`) with native metadata:
+* **Spanish Route (`/es/`):** Title: `Buscador de Fuentes — Identificar Tipografías por Imagen Gratis`.
+
+### 3. Two Essential Guardrails
+1. **Stop at `/es/` for Now (Do Not Jump to 7 Languages Yet):**
+   * Translating into 7 languages on Day 1 creates 7x maintenance before validating search traction.
+   * Master English + Spanish first; expand to `/de/`, `/fr/`, `/pt/` only after Google Search Console confirms click velocity.
+2. **Never Let Phase 2 Delay Phase 1:**
+   * Do not pause domain purchase or deployment to write Spanish copy. English `dist/` is already compiled and must go live first.
+
+---
+
+## Part 7: The Master 3-Phase Launch Checklist
+
+- [ ] **Phase 1 (Today — Nov 20, 2026): English Core Launch**
+  - [ ] Complete `viewmbox.com` registration on Hostinger (~₹692).
+  - [ ] Point domain nameservers to Cloudflare.
+  - [ ] Deploy compiled [`dist/`](file:///data/data/com.termux/files/home/viewmbox/dist/) to Cloudflare Pages (`npx wrangler pages deploy dist --project-name=viewmbox`).
+  - [ ] Add property in Google Search Console (DNS verification) & Bing Webmaster Tools.
+  - [ ] Ping Bing IndexNow with `https://viewmbox.com/` and all 6 subpage routes.
+  - [ ] Run Play A (Show HN), Play B (AlternativeTo), and Play C (Reddit) for initial 100 users.
+
+- [ ] **Phase 2 (Nov 21–22, 2026): Spanish i18n Subfolder (`/es/`)**
+  - [ ] Scaffold `src/pages/es/index.astro` (`Visor MBOX Online — Abrir y Buscar Archivos de Google Takeout Gratis`).
+  - [ ] Add Spanish UI string dictionary to `MboxApp.astro` (`Arrastra tu archivo .mbox aquí`, `100% Local y Seguro`, `Descargar .EML`).
+  - [ ] Add bidirectional `hreflang` tags on `/` and `/es/` (`en`, `es`, `x-default`).
+  - [ ] Recompile `npm run build`, redeploy to Cloudflare Pages, and ping IndexNow for `/es/`.
+
+- [ ] **Phase 3 (Nov 27, 2026 — Day 30 Maturity): Contextual Backlink**
+  - [ ] On Day 30 of `firmarpdfcertificado.com`, insert a single in-content editorial link inside an administrative email archiving guide:
+    ```html
+    <p>
+      Para consultar copias de seguridad de notificaciones o correos de Google Takeout 
+      sin instalar software en tu equipo, puedes utilizar este 
+      <a href="https://viewmbox.com/es/">visor MBOX online</a> 
+      que procesa los archivos localmente en tu navegador.
+    </p>
+    ```
+
