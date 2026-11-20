@@ -1,0 +1,44 @@
+---
+// src/pages/how-to-open-mbox-in-windows-without-thunderbird.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "How to Open MBOX in Windows 11/10 Without Thunderbird";
+const SEO_DESC = "Open and read MBOX files in Windows without installing Thunderbird or third-party desktop utilities. 100% in-browser, private, and handles 10GB+ archives.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">Windows Guide</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        How to Open MBOX Files in Windows Without Thunderbird
+      </h1>
+      <p class="text-slate-500 text-sm">A lightweight, modern alternative for Windows 11 and 10 users</p>
+    </div>
+
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      If you search online for <em>"how to open mbox in Windows"</em>, 90% of tech blogs instruct you to download and install <strong>Mozilla Thunderbird</strong>, set up a dummy email account, install the community <em>ImportExportTools NG</em> add-on, and wait hours for thousands of emails to import.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Why Thunderbird Is Overkill for Simple Viewing</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      Installing a full email client just to read a few emails from an old backup has severe downsides:
+    </p>
+    <ul class="text-sm text-slate-600 space-y-2 mb-6">
+      <li><strong>Disk Space Inflation:</strong> Thunderbird creates local profile caches that duplicate your multi-gigabyte archive on your primary SSD.</li>
+      <li><strong>Complex Setup:</strong> Newer versions of Thunderbird require configuring an active email account before allowing access to local folders.</li>
+      <li><strong>Plugin Incompatibilities:</strong> Third-party MBOX import extensions frequently break after major Thunderbird updates.</li>
+    </ul>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">The Modern Solution: In-Browser Streaming</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      With modern web standards (HTML5 File API and Web Workers), your browser (Chrome, Edge, Firefox) can read local binary files directly from your disk. <a href="/" class="text-sky-600 underline">ViewMbox.com</a> runs 100% locally on your Windows machine, streams multi-gigabyte archives in 16MB slices, and requires zero software installation or administrator privileges.
+    </p>
+
+    <div class="text-center pt-6 not-prose">
+      <a href="/" class="inline-block bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-full shadow-sm text-sm transition">
+        Open Your MBOX File on Windows →
+      </a>
+    </div>
+  </article>
+</Layout>

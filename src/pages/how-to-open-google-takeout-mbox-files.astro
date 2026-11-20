@@ -1,0 +1,57 @@
+---
+// src/pages/how-to-open-google-takeout-mbox-files.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "How to Open Google Takeout MBOX Files Without Software";
+const SEO_DESC = "Step-by-step tutorial on opening, reading and searching large Google Takeout MBOX email archives directly in your browser without installing Thunderbird.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">Tutorial & Guide</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        How to Open Google Takeout MBOX Files (Step-by-Step)
+      </h1>
+      <p class="text-slate-500 text-sm">Updated for 2026 · 5 min read · Zero software installation required</p>
+    </div>
+
+    <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sm text-sky-900 mb-8 not-prose">
+      <strong>Quick Answer:</strong> If you already downloaded your Google Takeout archive, extract the <code>.zip</code> file to find <code>All mail Including Spam and Trash.mbox</code>. You can drag and drop this file directly onto <a href="/" class="text-sky-700 underline font-semibold">ViewMbox.com</a> to read, search, and export emails in your browser without uploading any data.
+    </div>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Step 1: Extract Your Google Takeout ZIP Archive</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      Google Takeout delivers your email archive as a compressed <code>.zip</code> or multiple 2GB/10GB <code>.zip</code> parts. Before you can inspect your emails, you must extract the archive:
+    </p>
+    <ul class="text-sm text-slate-600 space-y-2 mb-6">
+      <li><strong>Windows:</strong> Right-click the Takeout zip file and select <em>Extract All...</em>.</li>
+      <li><strong>macOS:</strong> Double-click the zip file to unpack it with Archive Utility.</li>
+    </ul>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Inside the extracted folder, navigate to <code>Takeout &gt; Mail</code>. You will find a file named <code>All mail Including Spam and Trash.mbox</code> (or individual folder MBOX files if you selected specific labels).
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Step 2: Why Double-Clicking Fails on Windows & Mac</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      If you double-click an <code>.mbox</code> file, Windows will prompt you with <em>"How do you want to open this file?"</em>, and macOS will attempt to import the entire archive into Apple Mail, which can consume tens of gigabytes of disk space and freeze your computer. Traditionally, users were forced to install Mozilla Thunderbird and configure third-party plugins.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Step 3: Open the File in ViewMbox</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      To view your emails privately without installing desktop bloatware:
+    </p>
+    <ol class="text-sm text-slate-600 space-y-2 mb-8">
+      <li>Open <a href="/" class="text-sky-600 underline">ViewMbox.com</a> in Google Chrome, Microsoft Edge, Mozilla Firefox, or Apple Safari.</li>
+      <li>Drag and drop your <code>.mbox</code> file into the dropzone.</li>
+      <li>ViewMbox streams the file in chunks locally on your device, indexing thousands of emails per second.</li>
+      <li>Use the search bar to locate specific messages by sender, subject line, or date.</li>
+    </ol>
+
+    <div class="text-center pt-6 not-prose">
+      <a href="/" class="inline-block bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-full shadow-sm text-sm transition">
+        Open Your MBOX File Now →
+      </a>
+    </div>
+  </article>
+</Layout>

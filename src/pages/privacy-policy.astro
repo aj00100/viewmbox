@@ -1,0 +1,54 @@
+---
+// src/pages/privacy-policy.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "Privacy Policy — ViewMbox Zero-Upload Guarantee";
+const SEO_DESC = "Privacy Policy for ViewMbox.com. Learn why your files and emails are never uploaded, transmitted, or stored on any server. 100% GDPR compliant.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Privacy & GDPR</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        Privacy Policy & Zero-Upload Guarantee
+      </h1>
+      <p class="text-slate-500 text-sm">Last updated: November 20, 2026</p>
+    </div>
+
+    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-950 mb-8 not-prose">
+      <strong>Core Guarantee:</strong> ViewMbox does not operate any backend server that receives, processes, or stores your files. When you open an MBOX archive on ViewMbox.com, all parsing, indexing, and rendering occurs 100% locally within your web browser’s memory.
+    </div>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">1. Information We Do NOT Collect</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      Unlike cloud conversion platforms, ViewMbox does not collect, transmit, or store:
+    </p>
+    <ul class="text-sm text-slate-600 space-y-1 mb-6">
+      <li>Your <code>.mbox</code> or <code>.eml</code> files or any part of their binary contents.</li>
+      <li>Email sender addresses, recipient addresses, subject lines, or dates.</li>
+      <li>Email message bodies (text, HTML, or attachments).</li>
+      <li>User passwords, authentication credentials, or account tokens.</li>
+    </ul>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">2. How to Independently Verify Offline Execution</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      We believe trust should be verifiable. You can independently confirm our zero-upload guarantee by loading <a href="/" class="text-sky-600 underline">ViewMbox.com</a>, disconnecting your computer from the internet (or turning on Airplane mode), and dropping an MBOX file into the browser. The tool will parse and display your emails without sending any network requests.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">3. External Tracking Image Protection</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Many commercial marketing emails contain hidden 1x1 tracking pixels (web beacons) that notify the sender when an email is opened. ViewMbox displays email bodies inside an isolated iframe with a strict Content Security Policy (<code>default-src 'none'</code>) that blocks all external tracking images by default.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">4. Compliance with GDPR / CCPA</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Under Article 4 of the EU General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA), ViewMbox acts neither as a Data Controller nor a Data Processor for your email files, because personal data never enters our custody or infrastructure.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">5. Contact Information</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      For questions regarding this policy, contact us at <a href="mailto:privacy@viewmbox.com" class="text-sky-600 underline">privacy@viewmbox.com</a>.
+    </p>
+  </article>
+</Layout>

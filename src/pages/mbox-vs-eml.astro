@@ -1,0 +1,75 @@
+---
+// src/pages/mbox-vs-eml.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "MBOX vs EML: What Is the Difference? (Full Comparison)";
+const SEO_DESC = "Comprehensive comparison between MBOX and EML email formats. Learn differences in structure, storage, compatibility, and how to convert MBOX to EML.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">File Format Guide</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        MBOX vs EML: What Is the Difference?
+      </h1>
+      <p class="text-slate-500 text-sm">Understanding email storage architectures and compatibility</p>
+    </div>
+
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Both MBOX and EML are standard text-based formats used across the internet to store electronic mail (RFC 822 / RFC 2822). However, their internal architecture and use cases are fundamentally different.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Summary Comparison Table</h2>
+    
+    <div class="overflow-x-auto not-prose mb-8">
+      <table class="w-full text-left border-collapse text-xs border border-slate-200 bg-white rounded-lg">
+        <thead>
+          <tr class="bg-slate-100 text-slate-700">
+            <th class="p-3 border-b border-slate-200">Feature</th>
+            <th class="p-3 border-b border-slate-200 font-bold">MBOX (.mbox)</th>
+            <th class="p-3 border-b border-slate-200 font-bold">EML (.eml)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-600">
+          <tr>
+            <td class="p-3 font-semibold">Structure</td>
+            <td class="p-3">Single concatenated file containing thousands of messages</td>
+            <td class="p-3">Single standalone file containing exactly one message</td>
+          </tr>
+          <tr>
+            <td class="p-3 font-semibold">Delimiter</td>
+            <td class="p-3">Separated by lines starting with <code>From </code></td>
+            <td class="p-3">Complete standalone RFC 822 MIME stream</td>
+          </tr>
+          <tr>
+            <td class="p-3 font-semibold">Typical File Size</td>
+            <td class="p-3">500 MB to 20 GB+</td>
+            <td class="p-3">20 KB to 15 MB (includes attachments)</td>
+          </tr>
+          <tr>
+            <td class="p-3 font-semibold">Native OS Support</td>
+            <td class="p-3">None (requires dedicated viewer or client)</td>
+            <td class="p-3">Windows (Outlook/Mail), macOS (Apple Mail)</td>
+          </tr>
+          <tr>
+            <td class="p-3 font-semibold">Primary Use Case</td>
+            <td class="p-3">Bulk mailbox exports & backups (Google Takeout)</td>
+            <td class="p-3">Forwarding, archiving single legal evidence items</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Can You Convert MBOX to EML?</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      Yes. Because an MBOX archive is a sequential chain of EML messages, you can extract individual EML messages directly. In <a href="/" class="text-sky-600 underline">ViewMbox.com</a>, selecting any email allows you to click <em>Download .EML</em> to save that specific message as a standalone file that can be opened in Microsoft Outlook or Apple Mail.
+    </p>
+
+    <div class="text-center pt-6 not-prose">
+      <a href="/" class="inline-block bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-full shadow-sm text-sm transition">
+        Browse & Convert MBOX Files →
+      </a>
+    </div>
+  </article>
+</Layout>

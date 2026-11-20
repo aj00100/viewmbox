@@ -1,0 +1,114 @@
+---
+// src/layouts/Layout.astro
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+}
+
+const {
+  title,
+  description,
+  canonicalPath = Astro.url.pathname,
+} = Astro.props;
+
+const siteUrl = "https://viewmbox.com";
+const normalizedPath = canonicalPath.replace(/\/+$/, '');
+const canonicalUrl = `${siteUrl}${normalizedPath ? normalizedPath + '/' : '/'}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ViewMbox" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <!-- Header -->
+    <header class="border-b border-slate-200 bg-white sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 font-bold text-lg text-sky-700 hover:text-sky-800 transition">
+          <svg class="w-6 h-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span>ViewMbox</span>
+        </a>
+
+        <nav class="flex items-center gap-6 text-sm font-medium text-slate-600">
+          <a href="/how-to-open-google-takeout-mbox-files/" class="hover:text-sky-600 transition">Google Takeout Guide</a>
+          <a href="/mbox-vs-eml/" class="hover:text-sky-600 transition">MBOX vs EML</a>
+          <a href="/how-to-extract-attachments-from-mbox/" class="hover:text-sky-600 transition">Extract Attachments</a>
+          <a href="/about/" class="hover:text-sky-600 transition">About</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 bg-white mt-16 py-12 text-sm text-slate-500">
+      <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center gap-2 font-bold text-slate-800 mb-2">
+            <svg class="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span>ViewMbox.com</span>
+          </div>
+          <p class="text-xs text-slate-500 max-w-sm">
+            100% In-Browser MBOX & Google Takeout Viewer. Read multi-gigabyte email archives with zero uploads, total privacy, and instant search.
+          </p>
+          <div class="mt-4 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full w-fit border border-emerald-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Zero-Upload Guarantee · Works 100% Offline</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-800 mb-3 text-xs uppercase tracking-wider">Guides & Tutorials</h4>
+          <ul class="space-y-2 text-xs">
+            <li><a href="/how-to-open-google-takeout-mbox-files/" class="hover:text-sky-600">Open Google Takeout MBOX</a></li>
+            <li><a href="/mbox-vs-eml/" class="hover:text-sky-600">MBOX vs EML Explained</a></li>
+            <li><a href="/how-to-extract-attachments-from-mbox/" class="hover:text-sky-600">Extract Attachments from MBOX</a></li>
+            <li><a href="/how-to-open-mbox-in-windows-without-thunderbird/" class="hover:text-sky-600">Open MBOX on Windows (No Thunderbird)</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-800 mb-3 text-xs uppercase tracking-wider">Legal & Transparency</h4>
+          <ul class="space-y-2 text-xs">
+            <li><a href="/about/" class="hover:text-sky-600">About ViewMbox</a></li>
+            <li><a href="/privacy-policy/" class="hover:text-sky-600">Privacy Policy (Art. 13 GDPR)</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="max-w-6xl mx-auto px-4 pt-8 mt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400 gap-4">
+        <p>© 2026 ViewMbox. All rights reserved. Zero files are ever transmitted or stored on any server.</p>
+        <p>Built for privacy, speed, and 10GB+ archives.</p>
+      </div>
+    </footer>
+  </body>
+</html>

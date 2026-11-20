@@ -1,0 +1,43 @@
+---
+// src/pages/about.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "About ViewMbox — Private In-Browser MBOX & Takeout Viewer";
+const SEO_DESC = "Learn about ViewMbox.com: our mission to provide fast, 100% private in-browser tools for reading massive email archives with zero server uploads.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">Company & Mission</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        About ViewMbox
+      </h1>
+      <p class="text-slate-500 text-sm">Empowering privacy-first email archiving and digital sovereignty</p>
+    </div>
+
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      ViewMbox was built to solve a simple yet widespread digital blocker: when everyday users download their email data from Google Takeout, Apple Mail, or Thunderbird, they are handed a giant <code>.mbox</code> file that their computers cannot natively open.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">The Problem with Existing Tools</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Most "online MBOX viewers" on the web either impose artificial 50MB limits to sell desktop software, or force users to upload decades of confidential communications, bank statements, and legal contracts to third-party cloud servers.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Our Technical Moat</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      We believe personal data should never leave your personal computer. ViewMbox is engineered with a strict <strong>100% Client-Side Architecture</strong>:
+    </p>
+    <ul class="text-sm text-slate-600 space-y-2 mb-6">
+      <li><strong>Chunked Streaming:</strong> Uses HTML5 <code>File.slice()</code> and background Web Workers to stream 16MB slices, allowing 10GB+ files to open in less than 20MB of RAM.</li>
+      <li><strong>Zero Server Uploads:</strong> There is no backend server, database, or cloud storage receiving your files.</li>
+      <li><strong>Sandbox Security:</strong> HTML emails are displayed in strictly isolated iframes with tracking pixels blocked by default.</li>
+    </ul>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">Contact & Support</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      Have feedback, bug reports, or inquiries? Reach out to our engineering team at <a href="mailto:support@viewmbox.com" class="text-sky-600 underline">support@viewmbox.com</a>.
+    </p>
+  </article>
+</Layout>
