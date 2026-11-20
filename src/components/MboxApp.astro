@@ -11,21 +11,27 @@
     <span class="text-xs text-emerald-700">Postal-MIME Worker Engine</span>
   </div>
 
-  <!-- On-Screen Diagnostic Error Banner (Critical for Mobile Debugging) -->
+  <!-- Diagnostic Event Log (Shows exact live step on Android screen) -->
+  <div id="event-log" class="mb-4 rounded-lg border border-slate-200 bg-slate-100 p-3 text-xs font-mono text-slate-700">
+    <div><strong>Live Status:</strong> <span id="event-status-text">Ready. Please tap below to choose an .mbox file.</span></div>
+  </div>
+
+  <!-- On-Screen Error Banner -->
   <div id="status-debug" class="mb-4 hidden rounded-lg border border-red-300 bg-red-50 p-4 text-xs font-mono text-red-900 break-words"></div>
 
-  <!-- Dropzone -->
-  <div
+  <!-- Native Label Dropzone (Direct native browser click delegation without JS click() hacks) -->
+  <label
+    for="file-input"
     id="dropzone"
-    class="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-10 text-center transition hover:border-blue-500 active:bg-blue-50"
+    class="block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-10 text-center transition hover:border-blue-500 active:bg-blue-100"
   >
-    <input id="file-input" type="file" accept=".mbox,.mbx,.eml,.txt,.zip,.gz,.tgz,*/*" class="hidden" />
-    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <input id="file-input" type="file" accept=".mbox,.mbx,.eml,.txt,.zip,.gz,.tgz,*/*" class="sr-only" />
+    <svg class="mx-auto h-12 w-12 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
-    <p class="mt-3 text-lg font-semibold text-slate-800">Tap or Drop your .mbox file here</p>
-    <p class="mt-1 text-sm text-slate-500">Supports Google Takeout, Mozilla Thunderbird, and Apple Mail archives</p>
-  </div>
+    <p class="mt-3 text-lg font-semibold text-slate-800 pointer-events-none">Tap or Drop your .mbox file here</p>
+    <p class="mt-1 text-sm text-slate-500 pointer-events-none">Supports Google Takeout, Mozilla Thunderbird, and Apple Mail archives</p>
+  </label>
 
   <!-- 3-Step Google Takeout Visual Workflow -->
   <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-lg p-3">
@@ -156,6 +162,14 @@
   import type { EmailIndexItem, AttachmentMeta } from '../workers/mbox-worker';
 
   const debugEl = document.getElementById('status-debug')!;
+  const eventStatusText = document.getElementById('event-status-text')!;
+
+  function logStatus(msg: string) {
+    const time = new Date().toLocaleTimeString();
+    eventStatusText.textContent = `[${time}] ${msg}`;
+    console.log('[ViewMBOX]', msg);
+  }
+
   function showError(msg: string) {
     if (!msg) {
       debugEl.classList.add('hidden');
@@ -164,6 +178,7 @@
     }
     debugEl.textContent = '⚠️ ' + msg;
     debugEl.classList.remove('hidden');
+    logStatus('ERROR: ' + msg);
     console.error('[ViewMBOX]', msg);
   }
 
@@ -174,7 +189,6 @@
     showError(`Unhandled promise rejection: ${e.reason?.message || e.reason}`);
   });
 
-  const dropzone = document.getElementById('dropzone')!;
   const fileInput = document.getElementById('file-input') as HTMLInputElement;
   const zipWarning = document.getElementById('zip-warning')!;
   const progressWrap = document.getElementById('progress-wrap')!;
@@ -265,6 +279,7 @@
     emailHeader.classList.add('hidden');
     emailLoading.classList.remove('hidden');
 
+    logStatus(`Rendering email #${item.id + 1}: ${item.subject}...`);
     worker.postMessage({
       type: 'RENDER_EMAIL',
       file: currentFile,
@@ -283,7 +298,6 @@
     document.getElementById('view-from')!.textContent = `From: ${msg.from}`;
     document.getElementById('view-date')!.textContent = msg.date;
 
-    // Attachments (Metadata only, lazy binary extraction on click)
     attachmentsBar.innerHTML = '';
     for (const att of (msg.attachments as AttachmentMeta[]) || []) {
       const btn = document.createElement('button');
@@ -296,10 +310,12 @@
     }
 
     emailFrame.srcdoc = msg.srcdoc;
+    logStatus(`Viewing email #${(msg.emailId ?? 0) + 1}: ${msg.subject}`);
   }
 
   function downloadAttachment(attachmentIndex: number, filename: string) {
     if (!currentFile || !selectedEmail || !worker) return;
+    logStatus(`Extracting attachment: ${filename}...`);
     worker.postMessage({
       type: 'GET_ATTACHMENT',
       file: currentFile,
@@ -319,6 +335,7 @@
     a.download = `${safeName}.eml`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    logStatus(`Downloaded EML: ${safeName}.eml`);
   }
 
   function triggerDeepSearch() {
@@ -332,6 +349,7 @@
     searchBytesStat.textContent = `0 MB / ${formatBytes(currentFile.size)} scanned`;
     searchMatchesStat.textContent = '0 matches';
 
+    logStatus(`Initiated deep body search for "${q}"...`);
     worker.postMessage({
       type: 'DEEP_SEARCH',
       file: currentFile,
@@ -346,6 +364,7 @@
     isDeepSearching = false;
     searchProgressWrap.classList.add('hidden');
     searchModeIndicator.textContent = 'Header filter';
+    logStatus('Deep search cancelled.');
   }
 
   async function handleFile(file: File) {
@@ -355,10 +374,13 @@
       return;
     }
 
+    logStatus(`File selected: ${file.name} (${formatBytes(file.size)}). Checking format...`);
+
     try {
       zipWarning.classList.add('hidden');
       if (await isCompressedArchive(file)) {
         zipWarning.classList.remove('hidden');
+        logStatus(`Archive detected: ${file.name} is compressed. Please unzip first.`);
         return;
       }
 
@@ -376,24 +398,27 @@
       progressBar.style.width = '0%';
       progressLabel.textContent = `Scanning ${file.name} (${formatBytes(file.size)})...`;
 
-      // Use standard Vite ESM Worker syntax
+      logStatus(`Starting Web Worker to index ${file.name}...`);
+
       worker = new Worker(new URL('../workers/mbox-worker.ts', import.meta.url), {
         type: 'module',
       });
 
       worker.onerror = (e) => {
-        showError(`Worker error: ${e.message || 'Worker thread execution failed'}`);
+        showError(`Worker runtime error: ${e.message || 'Worker thread failed'}`);
         progressWrap.classList.add('hidden');
       };
 
       worker.onmessage = (e: MessageEvent) => {
         const msg = e.data;
+        if (!msg) return;
 
         if (msg.type === 'PROGRESS') {
           progressLabel.textContent = `Scanning ${file.name} (${msg.found.toLocaleString()} emails found)...`;
           progressPct.textContent = `${msg.percent}%`;
           progressBar.style.width = `${msg.percent}%`;
           progressDetails.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} indexed`;
+          logStatus(`Scanning: ${msg.found.toLocaleString()} emails found (${msg.percent}%)...`);
         } else if (msg.type === 'BATCH') {
           allEmails.push(...msg.items);
           progressLabel.textContent = `Indexing headers (${allEmails.length.toLocaleString()})...`;
@@ -403,6 +428,7 @@
         } else if (msg.type === 'DONE') {
           progressWrap.classList.add('hidden');
           renderList(allEmails);
+          logStatus(`Done! Indexed ${allEmails.length.toLocaleString()} emails.`);
           if (allEmails.length > 0) requestRenderEmail(allEmails[0], false);
         } else if (msg.type === 'EMAIL_RENDERED') {
           handleEmailRendered(msg);
@@ -414,6 +440,7 @@
           a.download = msg.filename;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
+          logStatus(`Attachment downloaded: ${msg.filename}`);
         } else if (msg.type === 'SEARCH_PROGRESS') {
           searchProgressBar.style.width = `${msg.percent}%`;
           searchBytesStat.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} scanned (${msg.percent}%)`;
@@ -425,6 +452,7 @@
           searchProgressWrap.classList.add('hidden');
           const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
           renderList(hits);
+          logStatus(`Search complete: ${hits.length} matching emails found.`);
         } else if (msg.type === 'SEARCH_ABORTED') {
           isDeepSearching = false;
           searchProgressWrap.classList.add('hidden');
@@ -435,27 +463,33 @@
       };
 
       worker.postMessage({ type: 'INDEX', file });
+      logStatus(`INDEX message posted to worker.`);
     } catch (err: any) {
       showError('Failed to initialize file processing: ' + (err?.message || String(err)));
     }
   }
 
-  // Dropzone click triggers file picker
-  dropzone.onclick = () => {
-    fileInput.value = '';
-    fileInput.click();
-  };
-
+  // Native File Input change
   fileInput.onchange = () => {
+    logStatus('File picker selected a file.');
     const f = fileInput.files?.[0];
-    if (f) handleFile(f);
+    if (f) {
+      handleFile(f);
+    } else {
+      logStatus('File picker closed without file selection.');
+    }
   };
 
+  // Drag and Drop (desktop / tablet)
+  const dropzone = document.getElementById('dropzone')!;
   dropzone.ondragover = (e) => e.preventDefault();
   dropzone.ondrop = (e) => {
     e.preventDefault();
     const f = e.dataTransfer?.files?.[0];
-    if (f) handleFile(f);
+    if (f) {
+      logStatus('File dropped onto dropzone: ' + f.name);
+      handleFile(f);
+    }
   };
 
   // Instant Header Filter on keystroke

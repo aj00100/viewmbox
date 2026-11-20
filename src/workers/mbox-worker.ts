@@ -68,7 +68,7 @@ function extractHeader(rawHeaders: string, name: string): string {
 }
 
 async function parseQuickHeaders(
-  file: File,
+  file: any,
   start: number,
   end: number
 ): Promise<{ subject: string; from: string; date: string }> {
@@ -115,6 +115,7 @@ let activeAbort = false;
 
 self.onmessage = async (e: MessageEvent) => {
   const data = e.data;
+  if (!data) return;
   const { type } = data;
 
   if (type === 'ABORT') {
@@ -122,98 +123,103 @@ self.onmessage = async (e: MessageEvent) => {
     return;
   }
 
-  // 1. FILE INDEXING
-  if (type === 'INDEX' && data.file instanceof File) {
+  // 1. FILE INDEXING (Accepts any sliceable Blob/File)
+  if (type === 'INDEX' && data.file && typeof data.file.slice === 'function') {
     activeAbort = false;
     const file = data.file;
     const fileSize = file.size;
     const boundaries: number[] = [];
     let offset = 0;
 
-    while (offset < fileSize) {
-      if (activeAbort) return;
+    try {
+      while (offset < fileSize) {
+        if (activeAbort) return;
 
-      const start = offset === 0 ? 0 : Math.max(0, offset - OVERLAP);
-      const end = Math.min(fileSize, offset + CHUNK_SIZE);
-      const bytes = new Uint8Array(await file.slice(start, end).arrayBuffer());
+        const start = offset === 0 ? 0 : Math.max(0, offset - OVERLAP);
+        const end = Math.min(fileSize, offset + CHUNK_SIZE);
+        const bytes = new Uint8Array(await file.slice(start, end).arrayBuffer());
 
-      // Check byte 0 for first email
-      if (offset === 0 && bytes.length >= 5) {
-        const headLine = utf8Decoder.decode(bytes.subarray(0, Math.min(120, bytes.length)));
-        if (FROM_LINE_RE.test(headLine)) {
-          boundaries.push(0);
-        }
-      }
-
-      // Scan for "\nFrom " (0x0A 0x46 0x72 0x6F 0x6D 0x20)
-      for (let i = 0; i < bytes.length - 6; i++) {
-        if (
-          bytes[i] === 0x0a &&
-          bytes[i + 1] === 0x46 &&
-          bytes[i + 2] === 0x72 &&
-          bytes[i + 3] === 0x6f &&
-          bytes[i + 4] === 0x6d &&
-          bytes[i + 5] === 0x20
-        ) {
-          const absPos = start + i + 1;
-          // Deduplicate overlap hits
-          if (boundaries.length > 0 && absPos <= boundaries[boundaries.length - 1]) {
-            continue;
-          }
-          const linePreview = utf8Decoder.decode(
-            bytes.subarray(i + 1, Math.min(bytes.length, i + 120))
-          );
-          if (FROM_LINE_RE.test(linePreview)) {
-            boundaries.push(absPos);
+        // Check byte 0 for first email
+        if (offset === 0 && bytes.length >= 5) {
+          const headLine = utf8Decoder.decode(bytes.subarray(0, Math.min(120, bytes.length)));
+          if (FROM_LINE_RE.test(headLine)) {
+            boundaries.push(0);
           }
         }
-      }
 
-      offset += CHUNK_SIZE;
-      self.postMessage({
-        type: 'PROGRESS',
-        stage: 'scanning',
-        scannedBytes: Math.min(fileSize, offset),
-        totalBytes: fileSize,
-        percent: Math.min(100, Math.round((offset / fileSize) * 100)),
-        found: boundaries.length,
-      });
-    }
+        // Scan for "\nFrom " (0x0A 0x46 0x72 0x6F 0x6D 0x20)
+        for (let i = 0; i < bytes.length - 6; i++) {
+          if (
+            bytes[i] === 0x0a &&
+            bytes[i + 1] === 0x46 &&
+            bytes[i + 2] === 0x72 &&
+            bytes[i + 3] === 0x6f &&
+            bytes[i + 4] === 0x6d &&
+            bytes[i + 5] === 0x20
+          ) {
+            const absPos = start + i + 1;
+            // Deduplicate overlap hits
+            if (boundaries.length > 0 && absPos <= boundaries[boundaries.length - 1]) {
+              continue;
+            }
+            const linePreview = utf8Decoder.decode(
+              bytes.subarray(i + 1, Math.min(bytes.length, i + 120))
+            );
+            if (FROM_LINE_RE.test(linePreview)) {
+              boundaries.push(absPos);
+            }
+          }
+        }
 
-    if (boundaries.length === 0) {
-      self.postMessage({ type: 'ERROR', message: 'No valid RFC 4155 email headers found in this file.' });
-      return;
-    }
-
-    // Build lightweight header index in batches of 200
-    const indexed: EmailIndexItem[] = [];
-    for (let i = 0; i < boundaries.length; i++) {
-      if (activeAbort) return;
-      const msgStart = boundaries[i];
-      const msgEnd = i + 1 < boundaries.length ? boundaries[i + 1] : fileSize;
-      const meta = await parseQuickHeaders(file, msgStart, msgEnd);
-
-      indexed.push({
-        id: i,
-        start: msgStart,
-        end: msgEnd,
-        ...meta,
-      });
-
-      if (indexed.length % 200 === 0 || i === boundaries.length - 1) {
+        offset += CHUNK_SIZE;
         self.postMessage({
-          type: 'BATCH',
-          items: indexed.slice(indexed.length - (indexed.length % 200 || 200)),
-          percent: Math.round(((i + 1) / boundaries.length) * 100),
+          type: 'PROGRESS',
+          stage: 'scanning',
+          scannedBytes: Math.min(fileSize, offset),
+          totalBytes: fileSize,
+          percent: Math.min(100, Math.round((offset / fileSize) * 100)),
+          found: boundaries.length,
         });
       }
-    }
 
-    self.postMessage({ type: 'DONE', total: boundaries.length });
+      if (boundaries.length === 0) {
+        self.postMessage({ type: 'ERROR', message: 'No valid RFC 4155 email headers found in this file.' });
+        return;
+      }
+
+      // Build lightweight header index in batches of 200
+      const indexed: EmailIndexItem[] = [];
+      for (let i = 0; i < boundaries.length; i++) {
+        if (activeAbort) return;
+        const msgStart = boundaries[i];
+        const msgEnd = i + 1 < boundaries.length ? boundaries[i + 1] : fileSize;
+        const meta = await parseQuickHeaders(file, msgStart, msgEnd);
+
+        indexed.push({
+          id: i,
+          start: msgStart,
+          end: msgEnd,
+          ...meta,
+        });
+
+        if (indexed.length % 200 === 0 || i === boundaries.length - 1) {
+          self.postMessage({
+            type: 'BATCH',
+            items: indexed.slice(indexed.length - (indexed.length % 200 || 200)),
+            percent: Math.round(((i + 1) / boundaries.length) * 100),
+          });
+        }
+      }
+
+      self.postMessage({ type: 'DONE', total: boundaries.length });
+    } catch (err: any) {
+      self.postMessage({ type: 'ERROR', message: `Worker indexing failed: ${err?.message || String(err)}` });
+    }
+    return;
   }
 
   // 2. PARSE & RENDER EMAIL IN WORKER (Zero Main-Thread Jank)
-  if (type === 'RENDER_EMAIL' && data.file instanceof File) {
+  if (type === 'RENDER_EMAIL' && data.file && typeof data.file.slice === 'function') {
     try {
       const { file, start, end, allowRemoteImages } = data;
       const rawBuffer = await file.slice(start, end).arrayBuffer();
@@ -228,14 +234,12 @@ self.onmessage = async (e: MessageEvent) => {
         const isInline = Boolean(att.contentId);
         const size = att.content ? att.content.byteLength : 0;
 
-        // Inline images under 5MB -> data: URI for seamless srcdoc rendering without CORS or opaque origin issues
         if (isInline && att.content && size < 5 * 1024 * 1024) {
           const base64 = uint8ArrayToBase64(new Uint8Array(att.content));
           const mime = att.mimeType || 'image/png';
           const cleanCid = att.contentId.replace(/^<|>$/g, '');
           cidMap.set(cleanCid, `data:${mime};base64,${base64}`);
         } else {
-          // Regular or large attachments: SEND METADATA ONLY! Do not transfer raw binary!
           attachmentsMeta.push({
             id: i,
             filename: att.filename || `attachment_${i + 1}.bin`,
@@ -251,13 +255,11 @@ self.onmessage = async (e: MessageEvent) => {
             email.text || '(Empty message)'
           )}</pre>`;
 
-      // Rewrite cid: inline images to data: URIs
       for (const [cid, dataUri] of cidMap.entries()) {
         const escapedCid = cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         bodyHtml = bodyHtml.replace(new RegExp(`cid:${escapedCid}`, 'gi'), dataUri);
       }
 
-      // CSP: only allow data: images by default; allow remote https: only if user explicitly toggled
       const imgSrc = allowRemoteImages ? 'data: https: http:' : 'data:';
       const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src ${imgSrc}; font-src data:;`;
 
@@ -297,10 +299,11 @@ self.onmessage = async (e: MessageEvent) => {
         message: err?.message || 'Failed to render email',
       });
     }
+    return;
   }
 
-  // 3. LAZY ATTACHMENT EXTRACTION (Binary decoded ONLY when clicked)
-  if (type === 'GET_ATTACHMENT' && data.file instanceof File) {
+  // 3. LAZY ATTACHMENT EXTRACTION
+  if (type === 'GET_ATTACHMENT' && data.file && typeof data.file.slice === 'function') {
     try {
       const { file, start, end, attachmentIndex } = data;
       const rawBuffer = await file.slice(start, end).arrayBuffer();
@@ -312,7 +315,6 @@ self.onmessage = async (e: MessageEvent) => {
         throw new Error('Attachment content not found');
       }
 
-      // Transfer ArrayBuffer with 0-copy to main thread
       const buffer = att.content;
       self.postMessage(
         {
@@ -329,10 +331,11 @@ self.onmessage = async (e: MessageEvent) => {
         message: err?.message || 'Failed to download attachment',
       });
     }
+    return;
   }
 
-  // 4. ON-DEMAND BODY SEARCH (Tier 2 Progressive Scan with QP decoding & cancellation)
-  if (type === 'DEEP_SEARCH' && data.file instanceof File && Array.isArray(data.items)) {
+  // 4. ON-DEMAND BODY SEARCH
+  if (type === 'DEEP_SEARCH' && data.file && typeof data.file.slice === 'function' && Array.isArray(data.items)) {
     activeAbort = false;
     const file = data.file;
     const items: EmailIndexItem[] = data.items;
@@ -351,7 +354,6 @@ self.onmessage = async (e: MessageEvent) => {
       const emailLen = item.end - item.start;
       scannedBytes += emailLen;
 
-      // Header matches already?
       if (
         item.subject.toLowerCase().includes(needle) ||
         item.from.toLowerCase().includes(needle) ||
@@ -359,12 +361,9 @@ self.onmessage = async (e: MessageEvent) => {
       ) {
         matchedIds.push(item.id);
       } else {
-        // Read text slice (cap reading at 2MB per email to skip giant binary blocks)
         const readLen = Math.min(emailLen, 2 * 1024 * 1024);
         const rawBuf = await file.slice(item.start, item.start + readLen).arrayBuffer();
         const rawText = latin1Decoder.decode(rawBuf);
-
-        // Normalize text: decode Quoted-Printable soft breaks and hex bytes so "in=0D=0Avoice" matches "invoice"
         const decodedText = decodeQuotedPrintable(rawText).toLowerCase();
 
         if (decodedText.includes(needle)) {
@@ -372,7 +371,6 @@ self.onmessage = async (e: MessageEvent) => {
         }
       }
 
-      // Emit progress updates every 50 emails or at the end
       if (i % 50 === 0 || i === items.length - 1) {
         self.postMessage({
           type: 'SEARCH_PROGRESS',
@@ -391,5 +389,8 @@ self.onmessage = async (e: MessageEvent) => {
       matchedIds,
       totalScanned: items.length,
     });
+    return;
   }
+
+  self.postMessage({ type: 'ERROR', message: `Unhandled worker message type: ${type}` });
 };
