@@ -6,8 +6,15 @@ export default defineConfig({
   site: 'https://viewmbox.com',
   output: 'static',
   trailingSlash: 'always',
+  build: {
+    inlineStylesheets: 'auto',
+  },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      host: true,
+      allowedHosts: true,
+    },
     worker: {
       format: 'es',
     },

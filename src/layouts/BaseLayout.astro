@@ -1,0 +1,64 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  schema?: Record<string, unknown>;
+}
+
+const { title, description, canonicalPath = Astro.url.pathname, schema } = Astro.props;
+const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary" />
+
+    {schema && (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    )}
+  </head>
+  <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased">
+    <header class="border-b bg-white">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+        <a href="/" class="text-lg font-bold tracking-tight text-slate-900">
+          ViewMBOX<span class="text-blue-600">.com</span>
+        </a>
+        <nav class="flex flex-wrap gap-5 text-sm text-slate-600">
+          <a href="/how-to-open-google-takeout-mbox-files/" class="hover:text-slate-900">Google Takeout Guide</a>
+          <a href="/mbox-vs-eml/" class="hover:text-slate-900">MBOX vs EML</a>
+          <a href="/how-to-extract-attachments-from-mbox/" class="hover:text-slate-900">Extract Attachments</a>
+          <a href="/about/" class="hover:text-slate-900">About</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="flex-1">
+      <slot />
+    </div>
+
+    <footer class="border-t bg-white mt-12">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+        <p>© {new Date().getFullYear()} ViewMBOX.com — 100% client-side MBOX reader. Zero files uploaded.</p>
+        <div class="flex gap-4">
+          <a href="/privacy-policy/" class="hover:text-slate-800">Privacy Policy</a>
+          <a href="/about/" class="hover:text-slate-800">About &amp; Contact</a>
+          <a href="/sitemap-index.xml" class="hover:text-slate-800">Sitemap</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

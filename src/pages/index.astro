@@ -1,97 +1,72 @@
 ---
-// src/pages/index.astro
-import Layout from '../layouts/Layout.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 import MboxApp from '../components/MboxApp.astro';
 
-const SEO_TITLE = "Free Online MBOX Viewer — Open 10GB+ Google Takeout Files";
-const SEO_DESC = "Open, read and search large MBOX and Google Takeout files online in your browser. 100% private, zero uploads, handles 10GB+ archives with instant search.";
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'ViewMBOX',
+      url: 'https://viewmbox.com/',
+      applicationCategory: 'UtilitiesApplication',
+      operatingSystem: 'Any (Web Browser)',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      description:
+        'Free 100% client-side MBOX viewer for 10GB+ Google Takeout, Thunderbird, and Apple Mail archives. Zero uploads, offline-safe.',
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Can I open a 10GB Google Takeout MBOX file in my browser?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. ViewMBOX uses 16MB File.slice() chunked streaming inside a Web Worker so multi-gigabyte MBOX archives open with ~20MB RAM and zero uploads.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Are my emails uploaded to a server?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'No. Zero bytes leave your device. You can disconnect your Wi-Fi before dropping an MBOX file to verify it runs 100% offline.',
+          },
+        },
+      ],
+    },
+  ],
+};
 ---
-
-<Layout title={SEO_TITLE} description={SEO_DESC}>
-  <!-- Hero Section -->
-  <section class="pt-12 pb-6 text-center max-w-4xl mx-auto px-4">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-semibold mb-4">
-      <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
-      <span>100% Local Browser Engine · No 50MB Limits</span>
-    </div>
-    
-    <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-      Open & Search <span class="text-sky-600">MBOX Files</span> in Your Browser
+<BaseLayout
+  title="ViewMBOX — Free Online MBOX Viewer for 10GB+ Google Takeout Files"
+  description="Open and search 10GB+ Google Takeout, Thunderbird, and Apple Mail .mbox files directly in your browser. 100% local, offline-safe, zero file uploads."
+  canonicalPath="/"
+  schema={schema}
+>
+  <div class="max-w-7xl mx-auto px-4 pt-8 pb-2">
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+      Free Online MBOX Viewer (10GB+ Local &amp; Offline)
     </h1>
-    
-    <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
-      The only free online viewer built for multi-gigabyte Google Takeout and Thunderbird archives. 
-      Read emails, browse attachments, and print to PDF with zero cloud uploads.
+    <p class="mt-2 text-slate-600 max-w-3xl">
+      Open Google Takeout, Mozilla Thunderbird, and Apple Mail <code>.mbox</code> archives instantly without installing desktop software or uploading private emails to a cloud server.
     </p>
-  </section>
+  </div>
 
-  <!-- Interactive Streaming Tool Component -->
   <MboxApp />
 
-  <!-- Educational & Authority Content Section (AdSense & SEO Moat) -->
-  <section class="max-w-4xl mx-auto px-4 py-16 prose prose-slate">
-    <div class="bg-white border border-slate-200 rounded-2xl p-8 mb-12 shadow-sm">
-      <h2 class="text-2xl font-bold text-slate-900 mb-4">Why Google Takeout MBOX Files Are Difficult to Open</h2>
-      <p class="text-slate-600 text-sm leading-relaxed mb-4">
-        When you download your Gmail archive using Google Takeout, Google packages years of your personal or business communications into a single monolithic <code>.mbox</code> file. While the MBOX format (RFC 4155) is an open standard, modern operating systems like Windows 11 and macOS cannot open it natively without installing specialized desktop email software.
-      </p>
-      <p class="text-slate-600 text-sm leading-relaxed mb-4">
-        Most web tools on the internet impose artificial <strong>50 MB to 100 MB file size limits</strong> or force you to upload your sensitive mailbox to their remote servers. ViewMbox solves this using streaming Web Workers and <code>File.slice()</code>: your archive is parsed locally on your own computer without using excessive RAM or sending a single byte over the internet.
-      </p>
-    </div>
+  <section class="max-w-4xl mx-auto px-4 py-10 space-y-6 text-slate-700 leading-relaxed">
+    <h2 class="text-2xl font-bold text-slate-900">How ViewMBOX Handles Multi-Gigabyte Archives</h2>
+    <p>
+      Standard web viewers crash above 50MB because they call <code>file.arrayBuffer()</code> and load the entire archive into browser RAM. ViewMBOX streams your file in 16MB slices inside a background Web Worker, indexing RFC 4155 message boundaries while keeping memory usage flat.
+    </p>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 not-prose">
-      <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-lg flex items-center justify-center font-bold text-lg mb-3">1</div>
-        <h3 class="font-bold text-slate-900 text-base mb-1">Select or Drop</h3>
-        <p class="text-slate-500 text-xs leading-relaxed">
-          Select any .mbox file from your hard drive or external disk. No account or registration required.
-        </p>
-      </div>
-
-      <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-lg flex items-center justify-center font-bold text-lg mb-3">2</div>
-        <h3 class="font-bold text-slate-900 text-base mb-1">Instant Indexing</h3>
-        <p class="text-slate-500 text-xs leading-relaxed">
-          Our background worker scans message boundaries in chunks, indexing 10,000+ emails in seconds with zero lag.
-        </p>
-      </div>
-
-      <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-lg flex items-center justify-center font-bold text-lg mb-3">3</div>
-        <h3 class="font-bold text-slate-900 text-base mb-1">Search & Export</h3>
-        <p class="text-slate-500 text-xs leading-relaxed">
-          Filter by sender, subject, or date. Read sandboxed emails, download attachments, or print clean PDFs.
-        </p>
-      </div>
-    </div>
-
-    <!-- FAQ Section (FAQPage Schema Ready) -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm not-prose">
-      <h2 class="text-xl font-bold text-slate-900 mb-6">Frequently Asked Questions</h2>
-      
-      <div class="space-y-6 text-sm divide-y divide-slate-100">
-        <div>
-          <h3 class="font-semibold text-slate-800 mb-1">Are my emails uploaded to any server?</h3>
-          <p class="text-slate-600 text-xs leading-relaxed">
-            No. ViewMbox operates entirely inside your web browser’s local sandbox using the HTML5 File API and Web Workers. Your emails never leave your computer. You can disconnect your internet connection and verify that the viewer continues to function.
-          </p>
-        </div>
-
-        <div class="pt-4">
-          <h3 class="font-semibold text-slate-800 mb-1">What is the maximum file size supported?</h3>
-          <p class="text-slate-600 text-xs leading-relaxed">
-            There is no fixed file size ceiling. ViewMbox uses chunked streaming (16MB slices) so it can open 5GB, 10GB, and 20GB+ archives without running out of memory.
-          </p>
-        </div>
-
-        <div class="pt-4">
-          <h3 class="font-semibold text-slate-800 mb-1">Can I save individual emails as PDF or EML?</h3>
-          <p class="text-slate-600 text-xs leading-relaxed">
-            Yes. Once you select any email message, you can click "Print to PDF" to format it cleanly for printing or archiving, or click "Download .EML" to export the raw message.
-          </p>
-        </div>
-      </div>
-    </div>
+    <h2 class="text-2xl font-bold text-slate-900">Built-In Privacy &amp; Tracker Blocking</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li><strong>Zero Server Uploads:</strong> All parsing runs locally. Disconnect Wi-Fi after loading the page to verify.</li>
+      <li><strong>Tracking Pixel Protection:</strong> HTML emails render inside a sandboxed iframe with a strict Content Security Policy that blocks remote images and beacons by default.</li>
+      <li><strong>Instant Export:</strong> Download individual messages as standard <code>.eml</code> files, save attachments, or print directly to PDF.</li>
+    </ul>
   </section>
-</Layout>
+</BaseLayout>
