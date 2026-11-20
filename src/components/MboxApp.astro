@@ -155,36 +155,11 @@
     </main>
   </div>
 
-  <!-- Dedicated Same-Origin Printable Container -->
-  <div id="print-area" class="hidden"></div>
-
   <!-- Ethical Disclosure -->
   <div class="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
     ViewMBOX is 100% tracker-free and does not serve behavioral ad network scripts on private email views.
   </div>
 </section>
-
-<style>
-  @media print {
-    :global(header),
-    :global(footer),
-    :global(#mbox-app > *:not(#print-area)),
-    :global(.max-w-7xl) {
-      display: none !important;
-    }
-    #print-area {
-      display: block !important;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      background: white !important;
-      color: black !important;
-      padding: 24px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-  }
-</style>
 
 <script>
   import type { EmailIndexItem, AttachmentMeta } from '../workers/mbox-worker';
@@ -348,6 +323,23 @@
 
     emailFrame.srcdoc = msg.srcdoc;
     logStatus(`Viewing email #${(msg.emailId ?? 0) + 1}: ${msg.subject}`);
+
+    // Pre-populate dedicated print container and activate print media mode
+    const printArea = document.getElementById('print-area');
+    if (printArea) {
+      printArea.innerHTML = `
+        <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
+          <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(msg.subject)}</h1>
+          <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(msg.from)}</div>
+          ${msg.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(msg.to)}</div>` : ''}
+          <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(msg.date)}</div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
+          ${msg.bodyHtml}
+        </div>
+      `;
+      document.body.classList.add('has-print-content');
+    }
   }
 
   function downloadAttachment(attachmentIndex: number, filename: string) {
@@ -434,6 +426,9 @@
       visibleEmails = [];
       selectedEmail = null;
       currentRenderedEmail = null;
+      document.body.classList.remove('has-print-content');
+      const printArea = document.getElementById('print-area');
+      if (printArea) printArea.innerHTML = '';
 
       progressWrap.classList.remove('hidden');
       viewer.classList.remove('hidden');
@@ -607,25 +602,28 @@
     downloadEmailPdf();
   };
 
-  // Same-origin printable container: 100% immune to iframe cross-origin SecurityErrors
+  // Dedicated print container: 100% immune to iframe cross-origin SecurityErrors and UI leakage
   document.getElementById('btn-print')!.onclick = () => {
     if (!currentRenderedEmail) {
       showError('Please select an email first before printing.');
       return;
     }
-    const printArea = document.getElementById('print-area')!;
-    printArea.innerHTML = `
-      <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
-        <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(currentRenderedEmail.subject)}</h1>
-        <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(currentRenderedEmail.from)}</div>
-        ${currentRenderedEmail.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(currentRenderedEmail.to)}</div>` : ''}
-        <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(currentRenderedEmail.date)}</div>
-      </div>
-      <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
-        ${currentRenderedEmail.bodyHtml}
-      </div>
-    `;
-    logStatus(`Opening Print / PDF preview for: ${currentRenderedEmail.subject}`);
+    const printArea = document.getElementById('print-area');
+    if (printArea) {
+      printArea.innerHTML = `
+        <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
+          <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(currentRenderedEmail.subject)}</h1>
+          <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(currentRenderedEmail.from)}</div>
+          ${currentRenderedEmail.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(currentRenderedEmail.to)}</div>` : ''}
+          <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(currentRenderedEmail.date)}</div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
+          ${currentRenderedEmail.bodyHtml}
+        </div>
+      `;
+      document.body.classList.add('has-print-content');
+    }
+    logStatus(`Opening Print preview for: ${currentRenderedEmail.subject}`);
     window.print();
   };
 </script>

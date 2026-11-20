@@ -32,34 +32,39 @@ const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
     )}
   </head>
   <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased">
-    <header class="border-b bg-white">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
-        <a href="/" class="flex items-center gap-2.5 text-lg font-bold tracking-tight text-slate-900">
-          <img src="/favicon.svg" alt="ViewMBOX Logo" class="h-7 w-7 rounded-lg shadow-sm" />
-          <span>ViewMBOX<span class="text-blue-600">.com</span></span>
-        </a>
-        <nav class="flex flex-wrap gap-5 text-sm text-slate-600">
-          <a href="/how-to-open-google-takeout-mbox-files/" class="hover:text-slate-900">Google Takeout Guide</a>
-          <a href="/mbox-vs-eml/" class="hover:text-slate-900">MBOX vs EML</a>
-          <a href="/how-to-extract-attachments-from-mbox/" class="hover:text-slate-900">Extract Attachments</a>
-          <a href="/about/" class="hover:text-slate-900">About</a>
-        </nav>
-      </div>
-    </header>
+    <div id="site-wrapper" class="min-h-screen flex flex-col">
+      <header class="border-b bg-white">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+          <a href="/" class="flex items-center gap-2.5 text-lg font-bold tracking-tight text-slate-900">
+            <img src="/favicon.svg" alt="ViewMBOX Logo" class="h-7 w-7 rounded-lg shadow-sm" />
+            <span>ViewMBOX<span class="text-blue-600">.com</span></span>
+          </a>
+          <nav class="flex flex-wrap gap-5 text-sm text-slate-600">
+            <a href="/how-to-open-google-takeout-mbox-files/" class="hover:text-slate-900">Google Takeout Guide</a>
+            <a href="/mbox-vs-eml/" class="hover:text-slate-900">MBOX vs EML</a>
+            <a href="/how-to-extract-attachments-from-mbox/" class="hover:text-slate-900">Extract Attachments</a>
+            <a href="/about/" class="hover:text-slate-900">About</a>
+          </nav>
+        </div>
+      </header>
 
-    <div class="flex-1">
-      <slot />
+      <div class="flex-1">
+        <slot />
+      </div>
+
+      <footer class="border-t bg-white mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} ViewMBOX.com — 100% client-side MBOX reader. Zero files uploaded.</p>
+          <div class="flex gap-4">
+            <a href="/privacy-policy/" class="hover:text-slate-800">Privacy Policy</a>
+            <a href="/about/" class="hover:text-slate-800">About &amp; Contact</a>
+            <a href="/sitemap-index.xml" class="hover:text-slate-800">Sitemap</a>
+          </div>
+        </div>
+      </footer>
     </div>
 
-    <footer class="border-t bg-white mt-12">
-      <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
-        <p>© {new Date().getFullYear()} ViewMBOX.com — 100% client-side MBOX reader. Zero files uploaded.</p>
-        <div class="flex gap-4">
-          <a href="/privacy-policy/" class="hover:text-slate-800">Privacy Policy</a>
-          <a href="/about/" class="hover:text-slate-800">About &amp; Contact</a>
-          <a href="/sitemap-index.xml" class="hover:text-slate-800">Sitemap</a>
-        </div>
-      </div>
-    </footer>
+    <!-- Dedicated Same-Origin Printable Container (Direct child of body, outside site-wrapper) -->
+    <div id="print-area" class="hidden"></div>
   </body>
 </html>
