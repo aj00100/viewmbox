@@ -197,7 +197,7 @@
   <!-- Viewer Split Pane -->
   <div id="viewer" class="mt-8 hidden grid grid-cols-1 gap-5 lg:grid-cols-12">
     <!-- Left Sidebar: Email List & Search -->
-    <aside class="lg:col-span-4 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden">
+    <aside id="email-list-pane" class="lg:col-span-4 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden scroll-mt-20">
       <div class="p-3.5 border-b border-slate-200 bg-slate-50/50 space-y-2.5">
         <div class="relative">
           <input
@@ -223,6 +223,9 @@
       <div id="email-header" class="border-b border-slate-200 p-4 sm:p-5 bg-slate-50/50 hidden">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="max-w-[65%] space-y-1">
+            <button id="btn-back-to-list" type="button" class="lg:hidden inline-flex items-center gap-1 text-xs text-blue-600 font-medium mb-1 cursor-pointer hover:underline">
+              ← Back to email list
+            </button>
             <h2 id="view-subject" class="text-lg font-bold text-slate-900 tracking-tight break-words"></h2>
             <p id="view-from" class="text-xs font-medium text-slate-600 break-words"></p>
             <p id="view-date" class="text-[11px] text-slate-400"></p>
@@ -383,7 +386,7 @@
       btn.children[0].textContent = item.subject || '(No Subject)';
       btn.children[1].textContent = item.from || '(Unknown Sender)';
       btn.children[2].textContent = item.date || '';
-      btn.onclick = () => requestRenderEmail(item, false);
+      btn.onclick = () => requestRenderEmail(item, false, true);
       frag.appendChild(btn);
     }
 
@@ -391,14 +394,14 @@
     emailList.appendChild(frag);
   }
 
-  function requestRenderEmail(item: EmailIndexItem, allowRemoteImages: boolean) {
+  function requestRenderEmail(item: EmailIndexItem, allowRemoteImages: boolean, shouldScroll: boolean = false) {
     if (!currentFile || !worker) return;
     selectedEmail = item;
     emailHeader.classList.add('hidden');
     emailLoading.classList.remove('hidden');
 
-    // On mobile / stacked view, auto-scroll smoothly down to the reading pane
-    if (window.innerWidth < 1024) {
+    // Only scroll down to reading pane if explicitly requested by a user tap on mobile
+    if (shouldScroll && window.innerWidth < 1024) {
       const pane = document.getElementById('email-viewer-pane');
       if (pane) {
         pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -940,7 +943,7 @@
   }
 
   document.getElementById('btn-remote-img')!.onclick = () => {
-    if (selectedEmail) requestRenderEmail(selectedEmail, true);
+    if (selectedEmail) requestRenderEmail(selectedEmail, true, false);
   };
   document.getElementById('btn-download-eml')!.onclick = () => {
     downloadRawEml();
@@ -948,4 +951,14 @@
   document.getElementById('btn-download-pdf')!.onclick = () => {
     downloadEmailPdf();
   };
+
+  const btnBackToList = document.getElementById('btn-back-to-list');
+  if (btnBackToList) {
+    btnBackToList.onclick = () => {
+      const listPane = document.getElementById('email-list-pane');
+      if (listPane) {
+        listPane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+  }
 </script>
