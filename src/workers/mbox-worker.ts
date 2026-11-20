@@ -407,17 +407,7 @@ self.onmessage = async (e: MessageEvent) => {
       const contentWidth = pageWidth - margin * 2;
 
       let page = doc.addPage([pageWidth, pageHeight]);
-      let y = pageHeight - margin;
-
-      // Blue accent banner
-      page.drawRectangle({
-        x: margin,
-        y: y - 4,
-        width: contentWidth,
-        height: 4,
-        color: rgb(0.145, 0.388, 0.922),
-      });
-      y -= 22;
+      let y = pageHeight - margin - 15;
 
       // Subject
       const subWords = (subject || '(No Subject)').split(' ');
