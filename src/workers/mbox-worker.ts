@@ -446,29 +446,29 @@ self.onmessage = async (e: MessageEvent) => {
       const font = await doc.embedFont(StandardFonts.Helvetica);
       const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
 
-      const pageWidth = 595.28; // A4
-      const pageHeight = 841.89;
-      const margin = 40;
+      const pageWidth = 595.28; // Standard A4 portrait width
+      const pageHeight = 841.89; // Standard A4 portrait height
+      const margin = 48; // ~17mm standard document margin
       const contentWidth = pageWidth - margin * 2;
 
       let page = doc.addPage([pageWidth, pageHeight]);
-      let y = pageHeight - margin - 15;
+      let y = pageHeight - margin - 10;
 
-      // Subject
+      // Subject (20px bold title)
       const subWords = (subject || '(No Subject)').split(' ');
       let subLine = '';
       for (const w of subWords) {
         const testSub = subLine ? subLine + ' ' + w : w;
         const cleanTest = testSub.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-        if (fontBold.widthOfTextAtSize(cleanTest, 15) > contentWidth && subLine) {
+        if (fontBold.widthOfTextAtSize(cleanTest, 18) > contentWidth && subLine) {
           page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
             x: margin,
             y,
-            size: 15,
+            size: 18,
             font: fontBold,
             color: rgb(0.06, 0.09, 0.16),
           });
-          y -= 18;
+          y -= 22;
           subLine = w;
         } else {
           subLine = testSub;
@@ -478,14 +478,14 @@ self.onmessage = async (e: MessageEvent) => {
         page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
           x: margin,
           y,
-          size: 15,
+          size: 18,
           font: fontBold,
           color: rgb(0.06, 0.09, 0.16),
         });
-        y -= 20;
+        y -= 24;
       }
 
-      // Metadata
+      // Metadata (Clean 10px sans-serif lines)
       const meta = [
         `From: ${from || 'Unknown'}`,
         `Date: ${date || 'Unknown'}`,
@@ -497,21 +497,21 @@ self.onmessage = async (e: MessageEvent) => {
         page.drawText(cleanM, {
           x: margin,
           y,
-          size: 9,
+          size: 10,
           font,
           color: rgb(0.3, 0.35, 0.42),
         });
-        y -= 13;
+        y -= 15;
       }
 
-      y -= 8;
+      y -= 6;
       page.drawLine({
         start: { x: margin, y },
         end: { x: pageWidth - margin, y },
-        thickness: 1,
+        thickness: 1.5,
         color: rgb(0.85, 0.88, 0.92),
       });
-      y -= 16;
+      y -= 20;
 
       // Draw inline logos / images if present in email
       const inlineImages = (data.inlineImages || []) as { name: string; mimeType: string; bytes: any }[];
@@ -613,7 +613,7 @@ self.onmessage = async (e: MessageEvent) => {
         for (const word of words) {
           const testLine = line ? line + ' ' + word : word;
           const sanitizedTest = testLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-          const width = font.widthOfTextAtSize(sanitizedTest, 10);
+          const width = font.widthOfTextAtSize(sanitizedTest, 11);
 
           if (width > contentWidth && line) {
             if (y < margin + 20) {
@@ -621,8 +621,8 @@ self.onmessage = async (e: MessageEvent) => {
               y = pageHeight - margin;
             }
             const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-            page.drawText(cleanLine, { x: margin, y, size: 10, font, color: rgb(0.1, 0.15, 0.2) });
-            y -= 14;
+            page.drawText(cleanLine, { x: margin, y, size: 11, font, color: rgb(0.12, 0.16, 0.22) });
+            y -= 16;
             line = word;
           } else {
             line = testLine;
@@ -635,8 +635,8 @@ self.onmessage = async (e: MessageEvent) => {
             y = pageHeight - margin;
           }
           const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-          page.drawText(cleanLine, { x: margin, y, size: 10, font, color: rgb(0.1, 0.15, 0.2) });
-          y -= 14;
+          page.drawText(cleanLine, { x: margin, y, size: 11, font, color: rgb(0.12, 0.16, 0.22) });
+          y -= 16;
         }
       }
 

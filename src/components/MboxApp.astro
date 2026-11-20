@@ -397,13 +397,15 @@
     const printArea = document.getElementById('print-area');
     if (!printArea) return;
     printArea.innerHTML = `
-      <div id="print-email-header" style="border-bottom: 1px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 16px;">
-        <h1 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(email.subject)}</h1>
-        <div style="font-size: 12px; color: #475569; margin-bottom: 2px;"><strong>From:</strong> ${escapeHtml(email.from)}</div>
-        ${email.to ? `<div style="font-size: 12px; color: #475569; margin-bottom: 2px;"><strong>To:</strong> ${escapeHtml(email.to)}</div>` : ''}
-        <div style="font-size: 12px; color: #475569;"><strong>Date:</strong> ${escapeHtml(email.date)}</div>
+      <div id="print-email-header">
+        <h1 id="print-email-subject">${escapeHtml(email.subject)}</h1>
+        <div id="print-email-meta">
+          <div><strong>From:</strong> ${escapeHtml(email.from)}</div>
+          ${email.to ? `<div><strong>To:</strong> ${escapeHtml(email.to)}</div>` : ''}
+          <div><strong>Date:</strong> ${escapeHtml(email.date)}</div>
+        </div>
       </div>
-      <div id="print-email-body" style="font-size: 13px; line-height: 1.5; color: #1e293b;">
+      <div id="print-email-body">
         ${email.bodyHtml}
       </div>
     `;

@@ -21,20 +21,18 @@ body {
 
 @page {
   size: A4 portrait;
-  margin: 12mm 15mm;
+  margin: 0;
 }
 
 @media print {
   html,
   body {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
-    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -44,22 +42,58 @@ body {
     display: none !important;
   }
 
-  /* Standalone print container */
+  /* A4 Portrait Paper Canvas */
   body.has-print-content #print-area {
     display: block !important;
-    position: static !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
+    position: relative !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: 210mm !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    padding: 20mm 20mm 25mm 20mm !important;
+    background: #ffffff !important;
     page-break-after: auto !important;
     break-after: auto !important;
   }
 
+  #print-email-header {
+    border-bottom: 2px solid #e2e8f0 !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 24px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  #print-email-subject {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.3 !important;
+    margin: 0 0 10px 0 !important;
+  }
+
+  #print-email-meta {
+    font-size: 13px !important;
+    color: #475569 !important;
+    line-height: 1.6 !important;
+  }
+
+  #print-email-body {
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    color: #1e293b !important;
+    word-wrap: break-word !important;
+  }
+
+  #print-email-body img {
+    max-width: 220px !important;
+    height: auto !important;
+    margin-bottom: 16px !important;
+  }
+
   /* Prevent trailing margins on last elements from creating an accidental blank page */
   #print-area * {
-    max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
@@ -68,10 +102,5 @@ body {
   #print-area > *:last-child > *:last-child > *:last-child {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
-  }
-
-  #print-email-header {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
   }
 }
