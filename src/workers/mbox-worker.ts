@@ -108,6 +108,28 @@ function decodeQuotedPrintable(str: string): string {
     });
 }
 
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*[\/]?>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\r\n/g, '\n')
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .trim();
+}
+
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -227,17 +249,37 @@ self.onmessage = async (e: MessageEvent) => {
 
       const cidMap = new Map<string, string>();
       const attachmentsMeta: AttachmentMeta[] = [];
+      const inlineImages: { name: string; mimeType: string; bytes: Uint8Array }[] = [];
 
       for (let i = 0; i < (email.attachments || []).length; i++) {
         const att = email.attachments[i];
-        const isInline = Boolean(att.contentId);
+        const isInline = Boolean(att.contentId) || att.disposition === 'inline' || Boolean(att.related);
+        const isImage = (att.mimeType || '').startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(att.filename || '');
         const size = att.content ? att.content.byteLength : 0;
 
         if (isInline && att.content && size < 5 * 1024 * 1024) {
-          const base64 = uint8ArrayToBase64(new Uint8Array(att.content));
+          const uint8 = new Uint8Array(att.content);
           const mime = att.mimeType || 'image/png';
-          const cleanCid = att.contentId.replace(/^<|>$/g, '');
-          cidMap.set(cleanCid, `data:${mime};base64,${base64}`);
+          if (att.contentId) {
+            const base64 = uint8ArrayToBase64(uint8);
+            const cleanCid = att.contentId.replace(/^<|>$/g, '');
+            cidMap.set(cleanCid, `data:${mime};base64,${base64}`);
+          }
+          if (isImage) {
+            inlineImages.push({
+              name: att.filename || 'image.png',
+              mimeType: mime,
+              bytes: uint8,
+            });
+          }
+          if (!att.contentId) {
+            attachmentsMeta.push({
+              id: i,
+              filename: att.filename || `attachment_${i + 1}.bin`,
+              mimeType: att.mimeType || 'application/octet-stream',
+              size,
+            });
+          }
         } else {
           attachmentsMeta.push({
             id: i,
@@ -282,6 +324,8 @@ self.onmessage = async (e: MessageEvent) => {
         .map((t) => `${t.name ? `${t.name} ` : ''}<${t.address || ''}>`)
         .join(', ');
 
+      const plainText = (email.text || '').trim() || htmlToPlainText(email.html || '');
+
       self.postMessage({
         type: 'EMAIL_RENDERED',
         emailId: data.emailId,
@@ -289,10 +333,11 @@ self.onmessage = async (e: MessageEvent) => {
         from: fromStr,
         to: toStr,
         date: email.date || '',
-        text: email.text || '',
+        text: plainText,
         srcdoc,
         bodyHtml,
         attachments: attachmentsMeta,
+        inlineImages,
       });
     } catch (err: any) {
       self.postMessage({
@@ -466,7 +511,85 @@ self.onmessage = async (e: MessageEvent) => {
         thickness: 1,
         color: rgb(0.85, 0.88, 0.92),
       });
-      y -= 20;
+      y -= 16;
+
+      // Draw inline logos / images if present in email
+      const inlineImages = (data.inlineImages || []) as { name: string; mimeType: string; bytes: any }[];
+      for (const imgData of inlineImages) {
+        try {
+          if (!imgData || !imgData.bytes) continue;
+          let rawBytes: Uint8Array;
+          if (imgData.bytes instanceof Uint8Array) {
+            rawBytes = imgData.bytes;
+          } else if (imgData.bytes instanceof ArrayBuffer) {
+            rawBytes = new Uint8Array(imgData.bytes);
+          } else if (ArrayBuffer.isView(imgData.bytes)) {
+            rawBytes = new Uint8Array(imgData.bytes.buffer, imgData.bytes.byteOffset, imgData.bytes.byteLength);
+          } else if (typeof imgData.bytes === 'object') {
+            rawBytes = new Uint8Array(Object.values(imgData.bytes));
+          } else {
+            continue;
+          }
+
+          if (rawBytes.byteLength === 0) continue;
+
+          // Check format: PNG or JPEG
+          const isPng =
+            (rawBytes.length >= 4 && rawBytes[0] === 0x89 && rawBytes[1] === 0x50 && rawBytes[2] === 0x4e && rawBytes[3] === 0x47) ||
+            imgData.mimeType?.includes('png') ||
+            imgData.name?.toLowerCase().endsWith('.png');
+
+          const isJpg =
+            (rawBytes.length >= 3 && rawBytes[0] === 0xff && rawBytes[1] === 0xd8 && rawBytes[2] === 0xff) ||
+            imgData.mimeType?.includes('jpeg') ||
+            imgData.mimeType?.includes('jpg') ||
+            imgData.name?.toLowerCase().endsWith('.jpg') ||
+            imgData.name?.toLowerCase().endsWith('.jpeg');
+
+          if (!isPng && !isJpg) {
+            // pdf-lib directly supports only PNG and JPEG
+            continue;
+          }
+
+          const embedded = isPng
+            ? await doc.embedPng(rawBytes)
+            : await doc.embedJpg(rawBytes);
+
+          const dims = embedded.scale(1);
+          let targetW = dims.width;
+          let targetH = dims.height;
+          if (!targetW || !targetH) continue;
+
+          const maxW = Math.min(220, contentWidth);
+          const maxH = 70;
+
+          if (targetW > maxW) {
+            const ratio = maxW / targetW;
+            targetW = maxW;
+            targetH = targetH * ratio;
+          }
+          if (targetH > maxH) {
+            const ratio = maxH / targetH;
+            targetH = maxH;
+            targetW = targetW * ratio;
+          }
+
+          if (y - targetH < margin + 40) {
+            page = doc.addPage([pageWidth, pageHeight]);
+            y = pageHeight - margin - 15;
+          }
+
+          page.drawImage(embedded, {
+            x: margin,
+            y: y - targetH,
+            width: targetW,
+            height: targetH,
+          });
+          y -= targetH + 16;
+        } catch (imgErr) {
+          console.warn('[PDF] Failed to embed image:', imgErr);
+        }
+      }
 
       // Body text wrapping
       const cleanBody = (text || 'No text content available.')
@@ -475,6 +598,15 @@ self.onmessage = async (e: MessageEvent) => {
       const rawLines = cleanBody.split('\n');
 
       for (const rawLine of rawLines) {
+        if (!rawLine.trim()) {
+          y -= 8;
+          if (y < margin + 20) {
+            page = doc.addPage([pageWidth, pageHeight]);
+            y = pageHeight - margin;
+          }
+          continue;
+        }
+
         const words = rawLine.split(' ');
         let line = '';
 
@@ -484,7 +616,7 @@ self.onmessage = async (e: MessageEvent) => {
           const width = font.widthOfTextAtSize(sanitizedTest, 10);
 
           if (width > contentWidth && line) {
-            if (y < margin + 30) {
+            if (y < margin + 20) {
               page = doc.addPage([pageWidth, pageHeight]);
               y = pageHeight - margin;
             }
@@ -498,7 +630,7 @@ self.onmessage = async (e: MessageEvent) => {
         }
 
         if (line) {
-          if (y < margin + 30) {
+          if (y < margin + 20) {
             page = doc.addPage([pageWidth, pageHeight]);
             y = pageHeight - margin;
           }
