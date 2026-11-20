@@ -158,7 +158,6 @@ self.onmessage = async (e: MessageEvent) => {
             bytes[i + 5] === 0x20
           ) {
             const absPos = start + i + 1;
-            // Deduplicate overlap hits
             if (boundaries.length > 0 && absPos <= boundaries[boundaries.length - 1]) {
               continue;
             }
@@ -187,7 +186,6 @@ self.onmessage = async (e: MessageEvent) => {
         return;
       }
 
-      // Build lightweight header index in batches of 200
       const indexed: EmailIndexItem[] = [];
       for (let i = 0; i < boundaries.length; i++) {
         if (activeAbort) return;
@@ -291,6 +289,7 @@ self.onmessage = async (e: MessageEvent) => {
         to: toStr,
         date: email.date || '',
         srcdoc,
+        bodyHtml,
         attachments: attachmentsMeta,
       });
     } catch (err: any) {

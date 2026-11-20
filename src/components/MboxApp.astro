@@ -19,7 +19,7 @@
   <!-- On-Screen Error Banner -->
   <div id="status-debug" class="mb-4 hidden rounded-lg border border-red-300 bg-red-50 p-4 text-xs font-mono text-red-900 break-words"></div>
 
-  <!-- Native Label Dropzone (Direct native browser click delegation without JS click() hacks) -->
+  <!-- Native Label Dropzone -->
   <label
     for="file-input"
     id="dropzone"
@@ -152,11 +152,36 @@
     </main>
   </div>
 
+  <!-- Dedicated Same-Origin Printable Container -->
+  <div id="print-area" class="hidden"></div>
+
   <!-- Ethical Disclosure -->
   <div class="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
     ViewMBOX is 100% tracker-free and does not serve behavioral ad network scripts on private email views.
   </div>
 </section>
+
+<style>
+  @media print {
+    :global(header),
+    :global(footer),
+    :global(#mbox-app > *:not(#print-area)),
+    :global(.max-w-7xl) {
+      display: none !important;
+    }
+    #print-area {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      background: white !important;
+      color: black !important;
+      padding: 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+  }
+</style>
 
 <script>
   import type { EmailIndexItem, AttachmentMeta } from '../workers/mbox-worker';
@@ -221,7 +246,15 @@
   let allEmails: EmailIndexItem[] = [];
   let visibleEmails: EmailIndexItem[] = [];
   let selectedEmail: EmailIndexItem | null = null;
+  let currentRenderedEmail: any = null;
   let isDeepSearching = false;
+
+  function escapeHtml(str: string): string {
+    return (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 
   function formatBytes(bytes: number): string {
     if (!bytes || bytes <= 0) return '0 B';
@@ -291,6 +324,7 @@
   }
 
   function handleEmailRendered(msg: any) {
+    currentRenderedEmail = msg;
     emailLoading.classList.add('hidden');
     emailHeader.classList.remove('hidden');
 
@@ -330,7 +364,11 @@
     const blob = currentFile.slice(selectedEmail.start, selectedEmail.end, 'message/rfc822');
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const safeName = (selectedEmail.subject || 'email').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60);
+    // Preserve Unicode characters (Japanese, Spanish, accents), strip only illegal file system characters
+    const safeName = (selectedEmail.subject || 'email')
+      .replace(/[/\\?%*:|"<>]+/g, '_')
+      .replace(/\s+/g, '_')
+      .slice(0, 60);
     a.href = url;
     a.download = `${safeName}.eml`;
     a.click();
@@ -392,6 +430,7 @@
       allEmails = [];
       visibleEmails = [];
       selectedEmail = null;
+      currentRenderedEmail = null;
 
       progressWrap.classList.remove('hidden');
       viewer.classList.remove('hidden');
@@ -530,7 +569,26 @@
   document.getElementById('btn-download-eml')!.onclick = () => {
     downloadRawEml();
   };
+
+  // Same-origin printable container: 100% immune to iframe cross-origin SecurityErrors
   document.getElementById('btn-print')!.onclick = () => {
-    emailFrame.contentWindow?.print();
+    if (!currentRenderedEmail) {
+      showError('Please select an email first before printing.');
+      return;
+    }
+    const printArea = document.getElementById('print-area')!;
+    printArea.innerHTML = `
+      <div style="border-bottom: 2px solid #cbd5e1; padding-bottom: 12px; margin-bottom: 20px;">
+        <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">${escapeHtml(currentRenderedEmail.subject)}</h1>
+        <div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>From:</strong> ${escapeHtml(currentRenderedEmail.from)}</div>
+        ${currentRenderedEmail.to ? `<div style="font-size: 13px; color: #475569; margin-bottom: 3px;"><strong>To:</strong> ${escapeHtml(currentRenderedEmail.to)}</div>` : ''}
+        <div style="font-size: 13px; color: #475569;"><strong>Date:</strong> ${escapeHtml(currentRenderedEmail.date)}</div>
+      </div>
+      <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
+        ${currentRenderedEmail.bodyHtml}
+      </div>
+    `;
+    logStatus(`Opening Print / PDF preview for: ${currentRenderedEmail.subject}`);
+    window.print();
   };
 </script>
