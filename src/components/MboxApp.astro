@@ -193,10 +193,6 @@
               <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               <span>Download PDF</span>
             </button>
-            <button id="btn-print" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer" title="Print physical copy or Save as PDF via browser print spooler">
-              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-              <span>Print</span>
-            </button>
             <button id="btn-download-eml" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer">
               <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               <span>Save .EML</span>
@@ -390,26 +386,6 @@
 
     emailFrame.srcdoc = msg.srcdoc;
     logStatus(`Viewing email #${(msg.emailId ?? 0) + 1}: ${msg.subject}`);
-    preparePrintArea(msg);
-  }
-
-  function preparePrintArea(email: any) {
-    const printArea = document.getElementById('print-area');
-    if (!printArea) return;
-    printArea.innerHTML = `
-      <div id="print-email-header">
-        <h1 id="print-email-subject">${escapeHtml(email.subject)}</h1>
-        <div id="print-email-meta">
-          <div><strong>From:</strong> ${escapeHtml(email.from)}</div>
-          ${email.to ? `<div><strong>To:</strong> ${escapeHtml(email.to)}</div>` : ''}
-          <div><strong>Date:</strong> ${escapeHtml(email.date)}</div>
-        </div>
-      </div>
-      <div id="print-email-body">
-        ${email.bodyHtml}
-      </div>
-    `;
-    document.body.classList.add('has-print-content');
   }
 
   function downloadAttachment(attachmentIndex: number, filename: string) {
@@ -496,9 +472,6 @@
       visibleEmails = [];
       selectedEmail = null;
       currentRenderedEmail = null;
-      document.body.classList.remove('has-print-content');
-      const printArea = document.getElementById('print-area');
-      if (printArea) printArea.innerHTML = '';
 
       progressWrap.classList.remove('hidden');
       viewer.classList.remove('hidden');
@@ -646,43 +619,248 @@
     if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
   });
 
-  function triggerPrintToPdf() {
+  async function downloadEmailPdf() {
     if (!currentRenderedEmail) {
-      showError('Please select an email first before printing.');
-      return;
-    }
-    preparePrintArea(currentRenderedEmail);
-    logStatus(`Opening Print spooler to Save as PDF for: ${currentRenderedEmail.subject}`);
-    window.print();
-  }
-
-  function downloadEmailPdf() {
-    if (!currentRenderedEmail || !worker) {
       showError('Please select an email first before downloading PDF.');
       return;
     }
 
-    // Detect CJK / non-Latin characters (Japanese, Chinese, Cyrillic, Arabic, etc.)
-    // Standard PDF fonts (Helvetica) cannot encode these and turn them into ????
-    const sample = `${currentRenderedEmail.subject} ${currentRenderedEmail.text || ''}`;
-    const hasUnicode = /[^\x00-\x7F\xA0-\xFF]/.test(sample);
+    logStatus(`Rendering A4 Portrait PDF for "${currentRenderedEmail.subject}"...`);
 
-    if (hasUnicode) {
-      logStatus('Japanese/Unicode characters detected. Opening native print spooler to Save as PDF without distortion...');
-      triggerPrintToPdf();
-      return;
+    try {
+      const { PDFDocument } = await import('pdf-lib');
+      const pdfDoc = await PDFDocument.create();
+
+      // Standard ISO A4 dimensions (150 DPI for crisp typography & light file size)
+      const A4_W = 1240;
+      const A4_H = 1754;
+      const marginX = 90;
+      const marginTop = 90;
+      const marginBottom = 90;
+      const contentWidth = A4_W - marginX * 2;
+
+      function createA4PageCanvas(): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
+        const c = document.createElement('canvas');
+        c.width = A4_W;
+        c.height = A4_H;
+        const ctx = c.getContext('2d')!;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, A4_W, A4_H);
+        return { canvas: c, ctx };
+      }
+
+      const pages: HTMLCanvasElement[] = [];
+      let { canvas, ctx } = createA4PageCanvas();
+      pages.push(canvas);
+
+      let y = marginTop;
+
+      function checkPageBreak(neededHeight: number) {
+        if (y + neededHeight > A4_H - marginBottom) {
+          const next = createA4PageCanvas();
+          canvas = next.canvas;
+          ctx = next.ctx;
+          pages.push(canvas);
+          y = marginTop;
+        }
+      }
+
+      // 1. Subject (Bold 34px)
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 34px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const subWords = (currentRenderedEmail.subject || '(No Subject)').split(' ');
+      let subLine = '';
+      for (const w of subWords) {
+        const testLine = subLine ? subLine + ' ' + w : w;
+        if (ctx.measureText(testLine).width > contentWidth && subLine) {
+          checkPageBreak(44);
+          ctx.fillText(subLine, marginX, y);
+          y += 44;
+          subLine = w;
+        } else {
+          subLine = testLine;
+        }
+      }
+      if (subLine) {
+        checkPageBreak(44);
+        ctx.fillText(subLine, marginX, y);
+        y += 44;
+      }
+      y += 10;
+
+      // 2. Metadata lines (20px, #475569)
+      ctx.fillStyle = '#475569';
+      ctx.font = '20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const metaLines = [
+        `From: ${currentRenderedEmail.from || 'Unknown'}`,
+        currentRenderedEmail.to ? `To: ${currentRenderedEmail.to}` : null,
+        `Date: ${currentRenderedEmail.date || 'Unknown'}`,
+      ].filter(Boolean) as string[];
+
+      for (const m of metaLines) {
+        checkPageBreak(30);
+        ctx.fillText(m, marginX, y);
+        y += 30;
+      }
+      y += 15;
+
+      // 3. Divider Line
+      checkPageBreak(25);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(marginX, y);
+      ctx.lineTo(A4_W - marginX, y);
+      ctx.stroke();
+      y += 35;
+
+      // 4. Inline Logos / Images (e.g. Cloud Billing logo)
+      const inlineImages = (currentRenderedEmail.inlineImages || []) as { name: string; mimeType: string; bytes: any }[];
+      for (const imgData of inlineImages) {
+        try {
+          if (!imgData || !imgData.bytes) continue;
+          let rawBytes: Uint8Array;
+          if (imgData.bytes instanceof Uint8Array) {
+            rawBytes = imgData.bytes;
+          } else if (imgData.bytes instanceof ArrayBuffer) {
+            rawBytes = new Uint8Array(imgData.bytes);
+          } else if (ArrayBuffer.isView(imgData.bytes)) {
+            rawBytes = new Uint8Array(imgData.bytes.buffer, imgData.bytes.byteOffset, imgData.bytes.byteLength);
+          } else if (typeof imgData.bytes === 'object') {
+            rawBytes = new Uint8Array(Object.values(imgData.bytes));
+          } else {
+            continue;
+          }
+          if (rawBytes.byteLength === 0) continue;
+
+          const blob = new Blob([rawBytes], { type: imgData.mimeType || 'image/png' });
+          const imgUrl = URL.createObjectURL(blob);
+          const img = new Image();
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+            img.src = imgUrl;
+          });
+
+          if (img.naturalWidth && img.naturalHeight) {
+            let drawW = img.naturalWidth;
+            let drawH = img.naturalHeight;
+            const maxW = Math.min(350, contentWidth);
+            const maxH = 120;
+            if (drawW > maxW) {
+              drawH = drawH * (maxW / drawW);
+              drawW = maxW;
+            }
+            if (drawH > maxH) {
+              drawW = drawW * (maxH / drawH);
+              drawH = maxH;
+            }
+
+            checkPageBreak(drawH + 30);
+            ctx.drawImage(img, marginX, y, drawW, drawH);
+            y += drawH + 30;
+          }
+          URL.revokeObjectURL(imgUrl);
+        } catch (imgErr) {
+          console.warn('[Canvas] Logo draw error:', imgErr);
+        }
+      }
+
+      // 5. Body Text (22px font, line-height 36px, #1e293b)
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '22px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const lineHeight = 36;
+      const rawBody = (currentRenderedEmail.text || 'No text content available.')
+        .replace(/\r\n/g, '\n')
+        .replace(/\t/g, '    ');
+      const lines = rawBody.split('\n');
+
+      for (const rawLine of lines) {
+        if (!rawLine.trim()) {
+          y += 18;
+          checkPageBreak(lineHeight);
+          continue;
+        }
+
+        // Detect CJK characters (Japanese / Chinese / Korean wrap character-by-character)
+        const isCjk = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(rawLine);
+
+        if (isCjk) {
+          let curLine = '';
+          for (const char of rawLine) {
+            const testLine = curLine + char;
+            if (ctx.measureText(testLine).width > contentWidth && curLine) {
+              checkPageBreak(lineHeight);
+              ctx.fillText(curLine, marginX, y);
+              y += lineHeight;
+              curLine = char;
+            } else {
+              curLine = testLine;
+            }
+          }
+          if (curLine) {
+            checkPageBreak(lineHeight);
+            ctx.fillText(curLine, marginX, y);
+            y += lineHeight;
+          }
+        } else {
+          const words = rawLine.split(' ');
+          let curLine = '';
+          for (const w of words) {
+            const testLine = curLine ? curLine + ' ' + w : w;
+            if (ctx.measureText(testLine).width > contentWidth && curLine) {
+              checkPageBreak(lineHeight);
+              ctx.fillText(curLine, marginX, y);
+              y += lineHeight;
+              curLine = w;
+            } else {
+              curLine = testLine;
+            }
+          }
+          if (curLine) {
+            checkPageBreak(lineHeight);
+            ctx.fillText(curLine, marginX, y);
+            y += lineHeight;
+          }
+        }
+      }
+
+      // 6. Assemble into Portrait A4 PDF pages (595.28 x 841.89 pt)
+      for (const pageCanvas of pages) {
+        const pngDataUrl = pageCanvas.toDataURL('image/png');
+        const base64Data = pngDataUrl.split(',')[1];
+        const binaryStr = atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const embeddedImg = await pdfDoc.embedPng(bytes);
+        const pdfPage = pdfDoc.addPage([595.28, 841.89]); // Strict Portrait A4
+        pdfPage.drawImage(embeddedImg, {
+          x: 0,
+          y: 0,
+          width: 595.28,
+          height: 841.89,
+        });
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = (currentRenderedEmail.subject || 'email')
+        .replace(/[/\\?%*:|"<>]+/g, '_')
+        .replace(/\s+/g, '_')
+        .slice(0, 60);
+      a.href = url;
+      a.download = `${safeName}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      logStatus(`Downloaded A4 Portrait PDF: ${safeName}.pdf`);
+    } catch (err: any) {
+      showError(`PDF generation failed: ${err?.message || String(err)}`);
     }
-
-    logStatus(`Generating PDF for "${currentRenderedEmail.subject}"...`);
-    worker.postMessage({
-      type: 'GENERATE_PDF',
-      subject: currentRenderedEmail.subject,
-      from: currentRenderedEmail.from,
-      to: currentRenderedEmail.to,
-      date: currentRenderedEmail.date,
-      text: currentRenderedEmail.text,
-      inlineImages: currentRenderedEmail.inlineImages || [],
-    });
   }
 
   document.getElementById('btn-remote-img')!.onclick = () => {
@@ -693,8 +871,5 @@
   };
   document.getElementById('btn-download-pdf')!.onclick = () => {
     downloadEmailPdf();
-  };
-  document.getElementById('btn-print')!.onclick = () => {
-    triggerPrintToPdf();
   };
 </script>
