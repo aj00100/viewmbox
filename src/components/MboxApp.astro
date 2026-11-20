@@ -138,8 +138,11 @@
             <button id="btn-download-eml" class="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer">
               Download .EML
             </button>
+            <button id="btn-download-pdf" class="rounded border border-blue-600 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 cursor-pointer">
+              Download PDF
+            </button>
             <button id="btn-print" class="rounded bg-slate-900 px-2.5 py-1 text-xs text-white hover:bg-slate-700 cursor-pointer">
-              Print / PDF
+              Print
             </button>
           </div>
         </div>
@@ -480,6 +483,21 @@
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
           logStatus(`Attachment downloaded: ${msg.filename}`);
+        } else if (msg.type === 'PDF_READY') {
+          const blob = new Blob([msg.buffer], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const cleanName = (msg.subject || 'email')
+            .replace(/[/\\?%*:|"<>]+/g, '_')
+            .replace(/\s+/g, '_')
+            .slice(0, 60);
+          a.href = url;
+          a.download = `${cleanName}.pdf`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          logStatus(`PDF downloaded to Downloads folder: ${cleanName}.pdf`);
+        } else if (msg.type === 'PDF_ERROR') {
+          showError('PDF generation failed: ' + msg.message);
         } else if (msg.type === 'SEARCH_PROGRESS') {
           searchProgressBar.style.width = `${msg.percent}%`;
           searchBytesStat.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} scanned (${msg.percent}%)`;
@@ -563,11 +581,30 @@
     if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
   });
 
+  function downloadEmailPdf() {
+    if (!currentRenderedEmail || !worker) {
+      showError('Please select an email first before downloading PDF.');
+      return;
+    }
+    logStatus(`Generating PDF for "${currentRenderedEmail.subject}"...`);
+    worker.postMessage({
+      type: 'GENERATE_PDF',
+      subject: currentRenderedEmail.subject,
+      from: currentRenderedEmail.from,
+      to: currentRenderedEmail.to,
+      date: currentRenderedEmail.date,
+      text: currentRenderedEmail.text,
+    });
+  }
+
   document.getElementById('btn-remote-img')!.onclick = () => {
     if (selectedEmail) requestRenderEmail(selectedEmail, true);
   };
   document.getElementById('btn-download-eml')!.onclick = () => {
     downloadRawEml();
+  };
+  document.getElementById('btn-download-pdf')!.onclick = () => {
+    downloadEmailPdf();
   };
 
   // Same-origin printable container: 100% immune to iframe cross-origin SecurityErrors

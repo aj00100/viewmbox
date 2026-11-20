@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import PostalMime from 'postal-mime';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 export interface EmailIndexItem {
   id: number;
@@ -255,7 +256,7 @@ self.onmessage = async (e: MessageEvent) => {
 
       for (const [cid, dataUri] of cidMap.entries()) {
         const escapedCid = cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        bodyHtml = bodyHtml.replace(new RegExp(`cid:${escapedCid}`, 'gi'), dataUri);
+        bodyHtml = bodyHtml.replace(new RegExp(`cid:<?${escapedCid}>?`, 'gi'), dataUri);
       }
 
       const imgSrc = allowRemoteImages ? 'data: https: http:' : 'data:';
@@ -288,6 +289,7 @@ self.onmessage = async (e: MessageEvent) => {
         from: fromStr,
         to: toStr,
         date: email.date || '',
+        text: email.text || '',
         srcdoc,
         bodyHtml,
         attachments: attachmentsMeta,
@@ -388,6 +390,150 @@ self.onmessage = async (e: MessageEvent) => {
       matchedIds,
       totalScanned: items.length,
     });
+    return;
+  }
+
+  // 5. DIRECT PDF EXPORT VIA PDF-LIB (Downloads directly to device Downloads folder)
+  if (type === 'GENERATE_PDF') {
+    try {
+      const { subject, from, to, date, text } = data;
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+      const pageWidth = 595.28; // A4
+      const pageHeight = 841.89;
+      const margin = 40;
+      const contentWidth = pageWidth - margin * 2;
+
+      let page = doc.addPage([pageWidth, pageHeight]);
+      let y = pageHeight - margin;
+
+      // Blue accent banner
+      page.drawRectangle({
+        x: margin,
+        y: y - 4,
+        width: contentWidth,
+        height: 4,
+        color: rgb(0.145, 0.388, 0.922),
+      });
+      y -= 22;
+
+      // Subject
+      const subWords = (subject || '(No Subject)').split(' ');
+      let subLine = '';
+      for (const w of subWords) {
+        const testSub = subLine ? subLine + ' ' + w : w;
+        const cleanTest = testSub.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
+        if (fontBold.widthOfTextAtSize(cleanTest, 15) > contentWidth && subLine) {
+          page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
+            x: margin,
+            y,
+            size: 15,
+            font: fontBold,
+            color: rgb(0.06, 0.09, 0.16),
+          });
+          y -= 18;
+          subLine = w;
+        } else {
+          subLine = testSub;
+        }
+      }
+      if (subLine) {
+        page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
+          x: margin,
+          y,
+          size: 15,
+          font: fontBold,
+          color: rgb(0.06, 0.09, 0.16),
+        });
+        y -= 20;
+      }
+
+      // Metadata
+      const meta = [
+        `From: ${from || 'Unknown'}`,
+        `Date: ${date || 'Unknown'}`,
+        to ? `To: ${to}` : null,
+      ].filter(Boolean) as string[];
+
+      for (const m of meta) {
+        const cleanM = m.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?').slice(0, 110);
+        page.drawText(cleanM, {
+          x: margin,
+          y,
+          size: 9,
+          font,
+          color: rgb(0.3, 0.35, 0.42),
+        });
+        y -= 13;
+      }
+
+      y -= 8;
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: pageWidth - margin, y },
+        thickness: 1,
+        color: rgb(0.85, 0.88, 0.92),
+      });
+      y -= 20;
+
+      // Body text wrapping
+      const cleanBody = (text || 'No text content available.')
+        .replace(/\r\n/g, '\n')
+        .replace(/\t/g, '    ');
+      const rawLines = cleanBody.split('\n');
+
+      for (const rawLine of rawLines) {
+        const words = rawLine.split(' ');
+        let line = '';
+
+        for (const word of words) {
+          const testLine = line ? line + ' ' + word : word;
+          const sanitizedTest = testLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
+          const width = font.widthOfTextAtSize(sanitizedTest, 10);
+
+          if (width > contentWidth && line) {
+            if (y < margin + 30) {
+              page = doc.addPage([pageWidth, pageHeight]);
+              y = pageHeight - margin;
+            }
+            const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
+            page.drawText(cleanLine, { x: margin, y, size: 10, font, color: rgb(0.1, 0.15, 0.2) });
+            y -= 14;
+            line = word;
+          } else {
+            line = testLine;
+          }
+        }
+
+        if (line) {
+          if (y < margin + 30) {
+            page = doc.addPage([pageWidth, pageHeight]);
+            y = pageHeight - margin;
+          }
+          const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
+          page.drawText(cleanLine, { x: margin, y, size: 10, font, color: rgb(0.1, 0.15, 0.2) });
+          y -= 14;
+        }
+      }
+
+      const pdfBytes = await doc.save();
+      const buffer = pdfBytes.buffer;
+      self.postMessage(
+        {
+          type: 'PDF_READY',
+          subject: subject || 'email',
+          buffer,
+        },
+        [buffer]
+      );
+    } catch (err: any) {
+      self.postMessage({
+        type: 'PDF_ERROR',
+        message: err?.message || 'Failed to generate PDF',
+      });
+    }
     return;
   }
 
