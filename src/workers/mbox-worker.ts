@@ -327,7 +327,34 @@ self.onmessage = async (e: MessageEvent) => {
     return;
   }
 
-  // 5. DIRECT PDF EXPORT VIA PDF-LIB
+function normalizeTextForStandardPdfFont(raw: string, shortenUrls = false): string {
+  if (!raw) return '';
+  let str = raw
+    .replace(/\r\n/g, '\n')
+    .replace(/\t/g, '    ')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015]/g, ' - ')
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, '* ')
+    .replace(/\u2026/g, '...')
+    .replace(/\u00A0/g, ' ');
+
+  if (shortenUrls) {
+    str = str.replace(/<https?:\/\/[^\s>]{40,}>/gi, (match) => {
+      try {
+        const urlStr = match.slice(1, -1);
+        const parsed = new URL(urlStr);
+        return `<${parsed.origin}${parsed.pathname.slice(0, 18)}...>`;
+      } catch (e) {
+        return match.slice(0, 35) + '...>';
+      }
+    });
+  }
+
+  return str.replace(/[^\x20-\x7E\xA0-\xFF\n]/g, ' ');
+}
+
+// 5. DIRECT PDF EXPORT VIA PDF-LIB
   if (type === 'GENERATE_PDF') {
     try {
       const { subject, from, to, date, text } = data;
@@ -344,13 +371,13 @@ self.onmessage = async (e: MessageEvent) => {
       let y = pageHeight - margin - 10;
 
       // Subject
-      const subWords = (subject || '(No Subject)').split(' ');
+      const normSubject = normalizeTextForStandardPdfFont(subject || '(No Subject)');
+      const subWords = normSubject.split(' ');
       let subLine = '';
       for (const w of subWords) {
         const testSub = subLine ? subLine + ' ' + w : w;
-        const cleanTest = testSub.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-        if (fontBold.widthOfTextAtSize(cleanTest, 18) > contentWidth && subLine) {
-          page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
+        if (fontBold.widthOfTextAtSize(testSub, 18) > contentWidth && subLine) {
+          page.drawText(subLine, {
             x: margin,
             y,
             size: 18,
@@ -364,7 +391,7 @@ self.onmessage = async (e: MessageEvent) => {
         }
       }
       if (subLine) {
-        page.drawText(subLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?'), {
+        page.drawText(subLine, {
           x: margin,
           y,
           size: 18,
@@ -376,13 +403,13 @@ self.onmessage = async (e: MessageEvent) => {
 
       // Metadata
       const meta = [
-        `From: ${from || 'Unknown'}`,
-        `Date: ${date || 'Unknown'}`,
-        to ? `To: ${to}` : null,
+        `From: ${normalizeTextForStandardPdfFont(from || 'Unknown')}`,
+        `Date: ${normalizeTextForStandardPdfFont(date || 'Unknown')}`,
+        to ? `To: ${normalizeTextForStandardPdfFont(to)}` : null,
       ].filter(Boolean) as string[];
 
       for (const m of meta) {
-        const cleanM = m.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?').slice(0, 110);
+        const cleanM = m.slice(0, 110);
         page.drawText(cleanM, {
           x: margin,
           y,
@@ -494,9 +521,8 @@ self.onmessage = async (e: MessageEvent) => {
       }
 
       // Body text wrapping
-      const cleanBody = (text || 'No text content available.')
-        .replace(/\r\n/g, '\n')
-        .replace(/\t/g, '    ');
+      const cleanBody = normalizeTextForStandardPdfFont(text || 'No text content available.', true)
+        .replace(/\n{3,}/g, '\n\n');
       const rawLines = cleanBody.split('\n');
 
       for (const rawLine of rawLines) {
@@ -514,16 +540,14 @@ self.onmessage = async (e: MessageEvent) => {
 
         for (const word of words) {
           const testLine = line ? line + ' ' + word : word;
-          const sanitizedTest = testLine.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-          const width = font.widthOfTextAtSize(sanitizedTest, 11);
+          const width = font.widthOfTextAtSize(testLine, 11);
 
           if (width > contentWidth && line) {
             if (y < margin + 20) {
               page = doc.addPage([pageWidth, pageHeight]);
               y = pageHeight - margin;
             }
-            const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-            page.drawText(cleanLine, {
+            page.drawText(line, {
               x: margin,
               y,
               size: 11,
@@ -542,8 +566,7 @@ self.onmessage = async (e: MessageEvent) => {
             page = doc.addPage([pageWidth, pageHeight]);
             y = pageHeight - margin;
           }
-          const cleanLine = line.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
-          page.drawText(cleanLine, {
+          page.drawText(line, {
             x: margin,
             y,
             size: 11,
