@@ -302,9 +302,13 @@
               <p id="view-date" class="text-[11px] text-slate-400"></p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button id="btn-download-pdf" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 transition-all duration-200 cursor-pointer">
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                <span>Download PDF</span>
+              <button id="btn-print-pdf" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 transition-all duration-200 cursor-pointer" title="Print or Save as PDF with full layout and all images">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                <span>Print / Save PDF</span>
+              </button>
+              <button id="btn-download-pdf" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:scale-95 transition-all duration-200 cursor-pointer" title="Download fast plain-text archival PDF">
+                <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <span>Quick PDF</span>
               </button>
               <button id="btn-download-eml" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:scale-95 transition-all duration-200 cursor-pointer">
                 <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -328,6 +332,17 @@
           </div>
         </div>
         <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white border-0"></iframe>
+
+        <!-- Dedicated High-Fidelity Print Container (Hidden on screen, active during @media print) -->
+        <div id="email-print-area" class="hidden">
+          <div id="print-header" class="border-b-2 border-slate-300 pb-3 mb-4">
+            <h1 id="print-subject" class="text-xl font-bold text-slate-900 mb-2 leading-snug"></h1>
+            <div id="print-from" class="text-xs text-slate-700 mb-1"></div>
+            <div id="print-to" class="text-xs text-slate-700 mb-1 hidden"></div>
+            <div id="print-date" class="text-xs text-slate-500"></div>
+          </div>
+          <div id="print-body" class="text-sm"></div>
+        </div>
       </main>
     </div>
   </div>
@@ -736,6 +751,65 @@
     logStatus('Search cancelled.');
   }
 
+  function printEmail() {
+    if (!currentRenderedEmail) {
+      showError('Please select an email first before printing or saving to PDF.');
+      return;
+    }
+
+    const printSubject = document.getElementById('print-subject');
+    const printFrom = document.getElementById('print-from');
+    const printTo = document.getElementById('print-to');
+    const printDate = document.getElementById('print-date');
+    const printBody = document.getElementById('print-body');
+
+    if (!printSubject || !printFrom || !printTo || !printDate || !printBody) return;
+
+    printSubject.textContent = currentRenderedEmail.subject || '(No Subject)';
+    printFrom.innerHTML = `<strong>From:</strong> ${escapeHtml(currentRenderedEmail.from || '(Unknown Sender)')}`;
+    if (currentRenderedEmail.to) {
+      printTo.innerHTML = `<strong>To:</strong> ${escapeHtml(currentRenderedEmail.to)}`;
+      printTo.classList.remove('hidden');
+    } else {
+      printTo.classList.add('hidden');
+    }
+    printDate.innerHTML = `<strong>Date:</strong> ${escapeHtml(currentRenderedEmail.date || '')}`;
+
+    printBody.innerHTML =
+      currentRenderedEmail.bodyHtml ||
+      `<pre style="white-space: pre-wrap; font-family: system-ui, sans-serif;">${escapeHtml(currentRenderedEmail.text || '')}</pre>`;
+
+    logStatus(`Preparing Print / Save as PDF for "${currentRenderedEmail.subject}"...`);
+
+    // Ensure all images are loaded before triggering print dialog
+    const imgs = Array.from(printBody.querySelectorAll('img'));
+    const pendingImgs = imgs.filter((img) => !img.complete);
+
+    const triggerPrint = () => {
+      logStatus(`Opening Print / Save as PDF dialog...`);
+      window.print();
+    };
+
+    if (pendingImgs.length > 0) {
+      const promises = pendingImgs.map(
+        (img) =>
+          new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          })
+      );
+      // Wait at most 1.5s for remote images to load, then proceed
+      Promise.race([
+        Promise.all(promises),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]).then(() => {
+        setTimeout(triggerPrint, 150);
+      });
+    } else {
+      setTimeout(triggerPrint, 150);
+    }
+  }
+
   // BUG FIX: PDF generation now delegates to worker (non-blocking)
   function downloadEmailPdf() {
     if (!currentRenderedEmail) {
@@ -1074,6 +1148,13 @@
     if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
   });
 
+  const btnPrintPdf = document.getElementById('btn-print-pdf');
+  if (btnPrintPdf) {
+    btnPrintPdf.onclick = () => {
+      printEmail();
+    };
+  }
+
   document.getElementById('btn-remote-img')!.onclick = () => {
     if (selectedEmail) requestRenderEmail(selectedEmail, true, false);
   };
@@ -1123,3 +1204,81 @@
     }
   });
 </script>
+
+<style is:global>
+  @media print {
+    /* Hide entire website chrome, header, footer, sidebars, and control buttons */
+    #site-wrapper > header,
+    #site-wrapper > footer,
+    #hero-section,
+    #dropzone-empty,
+    #dropzone-active,
+    #search-bar-wrap,
+    #stats-bar,
+    #email-list-pane,
+    #email-header,
+    #email-frame,
+    #email-loading,
+    #reading-pane-empty,
+    #attachments-bar,
+    .no-print {
+      display: none !important;
+    }
+
+    body,
+    html {
+      background: #ffffff !important;
+      color: #000000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    #site-wrapper,
+    main,
+    #app-container,
+    #workspace-section,
+    #email-viewer-pane {
+      display: block !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    #email-print-area {
+      display: block !important;
+      width: 100% !important;
+      visibility: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #email-print-area * {
+      visibility: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    #email-print-area img {
+      max-width: 100% !important;
+      height: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    #email-print-area table {
+      max-width: 100% !important;
+      page-break-inside: auto !important;
+    }
+
+    #email-print-area tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+</style>
