@@ -1,0 +1,73 @@
+---
+// src/pages/terms-of-service.astro
+import Layout from '../layouts/Layout.astro';
+
+const SEO_TITLE = "Terms of Service — ViewMBOX In-Browser Utility";
+const SEO_DESC = "Terms of Service for ViewMbox.com. Free, client-side email viewing utility provided as-is with zero data storage and complete local privacy.";
+---
+
+<Layout title={SEO_TITLE} description={SEO_DESC}>
+  <article class="max-w-3xl mx-auto px-4 py-12 prose prose-slate">
+    <div class="mb-8">
+      <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Terms & Conditions</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 mb-4">
+        Terms of Service
+      </h1>
+      <p class="text-slate-500 text-sm">Last updated: November 21, 2026</p>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-950 mb-8 not-prose">
+      <strong>Plain-English Summary:</strong> ViewMbox is a free, 100% in-browser utility. You do not need an account. Your email files and archives stay on your computer or phone and are never transmitted to any server. The service is provided as-is without warranties.
+    </div>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">1. Acceptance of Terms</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      By accessing or using ViewMbox.com, you agree to these Terms of Service. If you do not agree with any part of these terms, please discontinue use of the website.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">2. Description of Service & Local Execution</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      ViewMbox provides client-side parsing, reading, search, and export functionality for email archive files (such as <code>.mbox</code> and Google Takeout archives). All processing is executed locally via modern browser APIs (such as Web Workers and HTML5 File API).
+    </p>
+    <ul class="text-sm text-slate-600 space-y-1 mb-6">
+      <li>Zero files are uploaded or stored on external servers.</li>
+      <li>No user account, registration, or credentials are required.</li>
+      <li>Once the web application is loaded in your browser, the service functions independently of network availability.</li>
+    </ul>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">3. Acceptable Use</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      You agree to use ViewMbox only for lawful personal, educational, or professional purposes. You may not attempt to disrupt the website infrastructure, inject malicious code into client bundles, or bypass security headers.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">4. Disclaimer of Warranties</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+      ViewMbox is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis without warranties of any kind, either express or implied. While the parser is designed with fault-tolerant heuristics for malformed or truncated MIME archives:
+    </p>
+    <ul class="text-sm text-slate-600 space-y-1 mb-6">
+      <li>We do not guarantee that all corrupted or non-standard RFC archives can be fully reconstructed.</li>
+      <li>We do not guarantee uninterrupted, error-free operation across every browser configuration.</li>
+      <li>Users remain solely responsible for maintaining backup copies of their archival files.</li>
+    </ul>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">5. Limitation of Liability</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      To the maximum extent permitted by applicable law, ViewMbox, its authors, and contributors shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use this utility.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">6. Intellectual Property</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      The website interface, design, and client-side processing algorithms are proprietary or licensed under open-source standards. You retain 100% full and unencumbered ownership of your email files, attachments, and generated exports.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">7. Changes to Terms</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      We may occasionally revise these terms to reflect new browser capabilities or features. Revisions will be published directly on this page with an updated revision date.
+    </p>
+
+    <h2 class="text-xl font-bold text-slate-900 mt-8 mb-4">8. Contact</h2>
+    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+      For questions regarding these Terms, contact us at <a href="mailto:privacy@viewmbox.com" class="text-blue-600 underline">privacy@viewmbox.com</a>.
+    </p>
+  </article>
+</Layout>
