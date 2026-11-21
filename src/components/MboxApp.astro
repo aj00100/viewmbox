@@ -65,7 +65,7 @@
           📦 Google Takeout (All Mail)
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
-          ⚡ 10GB+ Tested
+          ⚡ 2GB+ Tested on Mobile
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
           🔒 100% Offline-Safe
@@ -937,6 +937,17 @@
       showError('Please select an email first before downloading PDF.');
       return;
     }
+
+    // Check if email contains non-Latin Unicode (Devanagari, CJK, Cyrillic, Arabic, Greek, etc.)
+    // Standard PDF-lib Helvetica font only supports Latin-1 (WinAnsi). Fallback to Visual PDF for full Unicode rendering.
+    const fullText = (currentRenderedEmail.subject || '') + ' ' + (currentRenderedEmail.text || '');
+    const hasNonLatin = /[^\x00-\x7F\u00A0-\u00FF]/.test(fullText);
+    if (hasNonLatin) {
+      logStatus('Multilingual / non-Latin characters detected. Using Visual PDF for native font support...');
+      printEmail();
+      return;
+    }
+
     if (!worker) {
       showError('Worker not available.');
       return;
