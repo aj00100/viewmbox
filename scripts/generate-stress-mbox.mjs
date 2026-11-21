@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 // Tier targets in bytes
 const TIERS = {
   '500mb': 500 * 1024 * 1024,
+  '2gb': 2 * 1024 * 1024 * 1024,
   '5gb': 5 * 1024 * 1024 * 1024,
   '12gb': 12 * 1024 * 1024 * 1024,
 };
