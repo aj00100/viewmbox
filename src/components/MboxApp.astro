@@ -423,6 +423,7 @@
   let visibleEmails: EmailIndexItem[] = [];
   let selectedEmail: EmailIndexItem | null = null;
   let currentRenderedEmail: any = null;
+  let currentAllowRemoteImages = false;
   let isDeepSearching = false;
   let displayedCount = 0;
   const BATCH_SIZE = 200;
@@ -570,6 +571,7 @@
   function requestRenderEmail(item: EmailIndexItem, allowRemoteImages: boolean, shouldScroll: boolean = false) {
     if (!currentFile || !worker) return;
     selectedEmail = item;
+    currentAllowRemoteImages = allowRemoteImages;
     emailHeader.classList.add('hidden');
     emailLoading.classList.remove('hidden');
 
@@ -775,6 +777,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="${currentAllowRemoteImages ? "default-src 'none'; img-src * data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline';" : "default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline';"}">
   <title>${escapeHtml(subject)}</title>
   ${originalStyles}
   <style>
