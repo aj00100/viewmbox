@@ -180,6 +180,17 @@ const canonicalUrl = new URL(canonicalPath, 'https://viewmbox.com').toString();
       </footer>
     </div>
 
+    <!-- Dedicated High-Fidelity Print Container (Completely outside #site-wrapper) -->
+    <div id="email-print-area" class="hidden">
+      <div id="print-header" class="border-b-2 border-slate-300 pb-3 mb-4">
+        <h1 id="print-subject" class="text-xl font-bold text-slate-900 mb-2 leading-snug"></h1>
+        <div id="print-from" class="text-xs text-slate-700 mb-1"></div>
+        <div id="print-to" class="text-xs text-slate-700 mb-1 hidden"></div>
+        <div id="print-date" class="text-xs text-slate-500"></div>
+      </div>
+      <div id="print-body" class="text-sm"></div>
+    </div>
+
     <script>
       document.documentElement.classList.add('js');
 

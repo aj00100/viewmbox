@@ -273,8 +273,53 @@ html {
 }
 
 @media print {
-  header,
-  footer {
+  /* Complete isolation: Hide the entire website wrapper */
+  #site-wrapper {
     display: none !important;
+  }
+
+  @page {
+    margin: 15mm;
+    size: auto;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #email-print-area {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #email-print-area * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #email-print-area img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  #email-print-area table {
+    max-width: 100% !important;
+    page-break-inside: auto !important;
+  }
+
+  #email-print-area tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }

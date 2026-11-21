@@ -332,17 +332,6 @@
           </div>
         </div>
         <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white border-0"></iframe>
-
-        <!-- Dedicated High-Fidelity Print Container (Hidden on screen, active during @media print) -->
-        <div id="email-print-area" class="hidden">
-          <div id="print-header" class="border-b-2 border-slate-300 pb-3 mb-4">
-            <h1 id="print-subject" class="text-xl font-bold text-slate-900 mb-2 leading-snug"></h1>
-            <div id="print-from" class="text-xs text-slate-700 mb-1"></div>
-            <div id="print-to" class="text-xs text-slate-700 mb-1 hidden"></div>
-            <div id="print-date" class="text-xs text-slate-500"></div>
-          </div>
-          <div id="print-body" class="text-sm"></div>
-        </div>
       </main>
     </div>
   </div>
@@ -1204,81 +1193,3 @@
     }
   });
 </script>
-
-<style is:global>
-  @media print {
-    /* Hide entire website chrome, header, footer, sidebars, and control buttons */
-    #site-wrapper > header,
-    #site-wrapper > footer,
-    #hero-section,
-    #dropzone-empty,
-    #dropzone-active,
-    #search-bar-wrap,
-    #stats-bar,
-    #email-list-pane,
-    #email-header,
-    #email-frame,
-    #email-loading,
-    #reading-pane-empty,
-    #attachments-bar,
-    .no-print {
-      display: none !important;
-    }
-
-    body,
-    html {
-      background: #ffffff !important;
-      color: #000000 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      height: auto !important;
-      overflow: visible !important;
-    }
-
-    #site-wrapper,
-    main,
-    #app-container,
-    #workspace-section,
-    #email-viewer-pane {
-      display: block !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      height: auto !important;
-      max-height: none !important;
-      overflow: visible !important;
-    }
-
-    #email-print-area {
-      display: block !important;
-      width: 100% !important;
-      visibility: visible !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    #email-print-area * {
-      visibility: visible !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    #email-print-area img {
-      max-width: 100% !important;
-      height: auto !important;
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-
-    #email-print-area table {
-      max-width: 100% !important;
-      page-break-inside: auto !important;
-    }
-
-    #email-print-area tr {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-  }
-</style>
