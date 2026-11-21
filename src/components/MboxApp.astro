@@ -344,6 +344,7 @@
 
 <script>
   import type { EmailIndexItem, AttachmentMeta } from '../workers/mbox-worker';
+  import MboxWorker from '../workers/mbox-worker.ts?worker&inline';
 
   const debugEl = document.getElementById('status-debug')!;
   const eventStatusText = document.getElementById('event-status-text')!;
@@ -1068,9 +1069,7 @@
 
       logStatus(`Starting Web Worker to index ${file.name}...`);
 
-      worker = new Worker(new URL('../workers/mbox-worker.ts', import.meta.url), {
-        type: 'module',
-      });
+      worker = new MboxWorker();
 
       worker.onerror = (e) => {
         clearInterval(indexTimerInterval);
