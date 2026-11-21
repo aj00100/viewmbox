@@ -3,40 +3,42 @@
 ---
 <section id="mbox-app" class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
   <!-- Privacy & Trust Hero Badge -->
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent px-5 py-3 text-sm text-emerald-950 shadow-xs">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent px-5 py-3.5 text-sm text-emerald-950 shadow-sm backdrop-blur-sm">
     <div class="flex items-center gap-3">
-      <span class="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-700">
+      <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/20">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
       </span>
       <div>
         <span class="font-bold">100% In-Browser Privacy:</span>
-        <span class="text-emerald-800">Your archive is parsed locally on your device. Zero server uploads, zero trackers. Disconnect internet to verify.</span>
+        <span class="text-emerald-800">Your archive is parsed locally on your device. Zero server uploads, zero external trackers.</span>
       </div>
     </div>
-    <span class="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-      <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+    <span class="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-500/20">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      </span>
       Offline-Safe
     </span>
   </div>
 
-  <!-- On-Screen Error Banner (Only shown if error occurs) -->
+  <!-- On-Screen Error Banner -->
   <div id="status-debug" class="mb-4 hidden rounded-xl border border-red-300 bg-red-50 p-4 text-xs font-mono text-red-900 break-words shadow-sm"></div>
 
-  <!-- 1. Default Empty Dropzone Card (Shown before a file is chosen) -->
-  <div id="dropzone-empty" class="relative rounded-3xl border-2 border-dashed border-slate-300 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/40 p-8 sm:p-12 text-center shadow-xs transition hover:border-blue-500 hover:shadow-md">
+  <!-- 1. Dropzone Empty — animated border + glow + full-area drag/drop -->
+  <div id="dropzone-empty" class="animated-border dropzone-glow relative rounded-3xl bg-gradient-to-b from-white via-slate-50/50 to-slate-100/30 p-8 sm:p-12 text-center shadow-sm transition-all duration-300 hover:shadow-lg">
     <label for="file-input" id="dropzone" class="block cursor-pointer">
       <input id="file-input" type="file" accept=".mbox,.mbx,.eml,.txt,.zip,.gz,.tgz,*/*" class="sr-only" />
-      
-      <!-- Icon Badge -->
-      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-8 ring-blue-50/50 mb-5 pointer-events-none">
+
+      <!-- Icon Badge with hover pulse -->
+      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-8 ring-blue-50/50 mb-5 pointer-events-none transition-transform duration-300 group-hover:scale-105">
         <svg class="h-10 w-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
       </div>
 
-      <!-- Main Headline -->
       <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight pointer-events-none">
         Drop your .mbox file here, or click to browse
       </h2>
@@ -46,7 +48,7 @@
 
       <!-- Primary Action Button -->
       <div class="mt-6 flex justify-center pointer-events-none">
-        <span class="inline-flex items-center gap-2.5 rounded-xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition">
+        <span class="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all duration-200">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
@@ -56,35 +58,49 @@
 
       <!-- Feature Pill Badges -->
       <div class="mt-6 flex flex-wrap justify-center items-center gap-2 text-xs font-medium text-slate-600 pointer-events-none">
-        <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 shadow-2xs border border-slate-200">
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
           📁 .mbox / .mbx
         </span>
-        <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 shadow-2xs border border-slate-200">
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
           📦 Google Takeout (All Mail)
         </span>
-        <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 shadow-2xs border border-slate-200">
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
           ⚡ 10GB+ Tested
         </span>
-        <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 shadow-2xs border border-slate-200">
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 shadow-sm border border-slate-200/80">
           🔒 100% Offline-Safe
         </span>
       </div>
     </label>
   </div>
 
-  <!-- 2. Active Archive Loaded Card (Shown when an archive is active) -->
-  <div id="dropzone-active" class="hidden rounded-3xl border border-blue-200/90 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white p-5 sm:p-6 shadow-xs transition">
+  <!-- Drag-over visual overlay -->
+  <div id="drag-overlay" class="hidden fixed inset-0 z-50 bg-blue-600/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+    <div class="rounded-3xl border-4 border-dashed border-blue-500 bg-white/90 px-16 py-12 text-center shadow-2xl">
+      <svg class="mx-auto h-16 w-16 text-blue-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      </svg>
+      <p class="text-xl font-extrabold text-slate-900">Drop to open archive</p>
+      <p class="text-sm text-slate-500 mt-1">.mbox, .mbx, .eml supported</p>
+    </div>
+  </div>
+
+  <!-- 2. Active Archive Loaded Card -->
+  <div id="dropzone-active" class="hidden rounded-3xl border border-blue-200/80 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white p-5 sm:p-6 shadow-sm transition-all duration-300">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center gap-3.5 min-w-0">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
-            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 ring-1 ring-emerald-500/20">
+              <span class="relative flex h-1.5 w-1.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
               Active Archive Loaded
             </span>
             <span id="active-file-stat" class="text-xs font-semibold text-slate-500"></span>
@@ -97,7 +113,7 @@
         <button
           id="btn-upload-another"
           type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-slate-900 active:scale-95 transition cursor-pointer"
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 active:scale-95 transition-all duration-200 cursor-pointer"
         >
           <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -109,15 +125,15 @@
   </div>
 
   <!-- Subtle Status Line -->
-  <div id="event-log" class="mt-3 flex items-center justify-between text-xs text-slate-400 px-2">
+  <div id="event-log" class="mt-3 flex items-center justify-between text-[11px] text-slate-400 px-2">
     <div class="flex items-center gap-1.5">
-      <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+      <span class="h-1.5 w-1.5 rounded-full bg-slate-300"></span>
       <span id="event-status-text">Engine ready. Select an archive to begin.</span>
     </div>
-    <span>ViewMBOX v2.0 Client-Side</span>
+    <span class="font-medium text-slate-300">ViewMBOX v2.0</span>
   </div>
 
-  <!-- ZIP / GZIP Warning & Guidance Banner (Only shown contextually when user drops a .zip archive) -->
+  <!-- ZIP / GZIP Warning Banner -->
   <div id="zip-warning" class="mt-5 hidden rounded-3xl border border-amber-300 bg-amber-50/90 p-6 sm:p-7 text-amber-950 shadow-sm">
     <div class="flex items-center gap-3 font-extrabold text-base sm:text-lg text-amber-900 mb-2">
       <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-200/80 text-amber-800 shrink-0">
@@ -130,32 +146,28 @@
     <p class="text-xs sm:text-sm text-amber-900 leading-relaxed max-w-3xl">
       You selected a compressed archive. Web browsers cannot random-seek multi-gigabyte compressed ZIP archives without exhausting device memory. Follow these 3 steps:
     </p>
-
-    <!-- 3-Step Guided Takeout Extraction -->
     <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3.5">
-      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-2xs">
+      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 font-black text-amber-800 text-[11px]">01</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-100 font-black text-amber-800 text-[11px]">01</span>
           <strong class="text-xs text-slate-900">Locate Takeout ZIP</strong>
         </div>
         <p class="text-[11px] text-slate-600 leading-relaxed">
           Find your downloaded <code>takeout-*.zip</code> file in your Downloads folder.
         </p>
       </div>
-
-      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-2xs">
+      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 font-black text-amber-800 text-[11px]">02</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-100 font-black text-amber-800 text-[11px]">02</span>
           <strong class="text-xs text-slate-900">Extract on Device</strong>
         </div>
         <p class="text-[11px] text-slate-600 leading-relaxed">
           Right-click &rarr; <em>Extract All</em> on your computer (or tap Extract on mobile).
         </p>
       </div>
-
-      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-2xs">
+      <div class="rounded-xl border border-amber-200 bg-white/95 p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 font-black text-amber-800 text-[11px]">03</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-100 font-black text-amber-800 text-[11px]">03</span>
           <strong class="text-xs text-slate-900">Select All mail.mbox</strong>
         </div>
         <p class="text-[11px] text-slate-600 leading-relaxed">
@@ -165,103 +177,150 @@
     </div>
   </div>
 
-  <!-- Scan / Index Progress Bar -->
-  <div id="progress-wrap" class="mt-5 hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-    <div class="flex justify-between text-xs text-slate-700 mb-2 font-medium">
+  <!-- Scan / Index Progress Bar with shimmer effect -->
+  <div id="progress-wrap" class="mt-5 hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex justify-between text-xs text-slate-700 mb-2.5 font-medium">
       <span id="progress-label" class="font-bold text-slate-900">Scanning email boundaries...</span>
       <span id="progress-pct" class="font-bold text-blue-600">0%</span>
     </div>
     <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
-      <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-150" style="width:0%"></div>
+      <div id="progress-bar" class="h-full progress-shimmer progress-glow rounded-full transition-all duration-150" style="width:0%"></div>
     </div>
-    <div id="progress-details" class="mt-2 text-xs text-slate-500">0 MB processed</div>
+    <div id="progress-details" class="mt-2.5 text-[11px] text-slate-500">0 MB processed</div>
   </div>
 
-  <!-- Deep Search Progress Bar (Tier 2 Progressive Scan) -->
-  <div id="search-progress-wrap" class="mt-4 hidden rounded-2xl border border-blue-200 bg-blue-50/80 p-4 shadow-xs">
-    <div class="flex items-center justify-between text-xs text-blue-900 mb-2">
-      <span id="search-progress-label" class="font-bold">Searching email bodies...</span>
-      <button id="btn-cancel-search" class="text-xs font-semibold text-blue-700 hover:text-red-600 underline cursor-pointer">
-        Cancel Search (Esc)
-      </button>
+  <!-- Deep Search Progress Bar & Real-Time Performance Counter -->
+  <div id="search-progress-wrap" class="mt-4 hidden rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/95 via-indigo-50/60 to-white p-4 sm:p-5 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-blue-900 mb-2.5">
+      <div class="flex items-center gap-2">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+        </span>
+        <span id="search-progress-label" class="font-extrabold text-sm text-slate-900">Searching email bodies...</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="search-timer-stat" class="font-mono bg-blue-600 text-white px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">0.0s</span>
+        <button id="btn-cancel-search" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-red-600 hover:border-red-300 transition-colors cursor-pointer shadow-sm">
+          Cancel <kbd class="kbd">Esc</kbd>
+        </button>
+      </div>
     </div>
-    <div class="h-2.5 w-full rounded-full bg-blue-200 overflow-hidden">
-      <div id="search-progress-bar" class="h-full bg-blue-600 transition-all duration-150" style="width:0%"></div>
+    <div class="h-3 w-full rounded-full bg-blue-100 overflow-hidden">
+      <div id="search-progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-100" style="width:0%"></div>
     </div>
-    <div id="search-progress-details" class="mt-2 flex justify-between text-xs text-blue-700 font-medium">
-      <span id="search-bytes-stat">0 MB / 0 MB scanned</span>
-      <span id="search-matches-stat">0 matches</span>
+    <div id="search-progress-details" class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-600">
+      <div class="flex items-center gap-3">
+        <span id="search-emails-stat" class="font-mono font-bold text-slate-900">Checked 0 / 0</span>
+        <span class="text-slate-300">&bull;</span>
+        <span id="search-bytes-stat" class="font-mono text-slate-500">0 MB / 0 MB</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="search-speed-stat" class="font-mono font-bold text-blue-700">0 MB/s</span>
+        <span id="search-matches-stat" class="rounded-full bg-emerald-600 text-white font-bold px-2.5 py-0.5 text-[11px] shadow-sm">0 matches</span>
+      </div>
     </div>
   </div>
 
-  <!-- Viewer Split Pane -->
-  <div id="viewer" class="mt-8 hidden grid grid-cols-1 gap-5 lg:grid-cols-12">
-    <!-- Left Sidebar: Email List & Search -->
-    <aside id="email-list-pane" class="lg:col-span-4 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden scroll-mt-20">
-      <div class="p-3.5 border-b border-slate-200 bg-slate-50/50 space-y-2.5">
-        <div class="relative">
-          <input
-            id="search-input"
-            type="search"
-            placeholder="Filter subject, sender... (Press Enter for body search)"
-            class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs pr-8 shadow-2xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition"
-          />
-          <button id="btn-deep-search" title="Deep Search Email Bodies" class="absolute right-2.5 top-2 text-xs text-slate-400 hover:text-blue-600 cursor-pointer">
-            🔍
+  <!-- Viewer Split Pane — BUG FIX: no conflicting hidden+grid, use wrapper -->
+  <div id="viewer-wrapper" class="mt-8 hidden">
+    <div id="viewer" class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <!-- Left Sidebar: Email List & Search -->
+      <aside id="email-list-pane" class="lg:col-span-4 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden scroll-mt-20">
+        <div class="p-3.5 border-b border-slate-200 bg-slate-50/80 space-y-2.5">
+          <form id="search-form" class="relative" action="javascript:void(0);">
+            <input
+              id="search-input"
+              type="search"
+              enterkeyhint="search"
+              placeholder="Search subject, sender, body..."
+              class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs pr-24 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
+            />
+            <div class="absolute right-1.5 top-1.5 flex items-center gap-1">
+              <button
+                type="submit"
+                id="btn-deep-search"
+                title="Search Archive (Enter)"
+                class="inline-flex items-center gap-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95"
+              >
+                <span>🔍</span>
+                <span class="text-[10px]">Search</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Sidebar Live Search Counter -->
+          <div id="sidebar-live-counter" class="hidden rounded-xl bg-blue-50 border border-blue-200/90 px-3 py-1.5 text-xs font-mono text-blue-900 flex items-center justify-between shadow-xs">
+            <span id="sidebar-count-text" class="font-semibold text-blue-900">Checked 0 / 0</span>
+            <span id="sidebar-timer-text" class="font-bold text-white bg-blue-600 px-2 py-0.5 rounded-md text-[11px]">0.0s</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+            <span id="count-label" class="rounded-full bg-slate-200/80 px-2.5 py-0.5 text-[11px] text-slate-700 font-bold">0 emails</span>
+            <div class="flex items-center gap-2">
+              <span id="search-mode-indicator" class="text-[11px] text-slate-400">All emails</span>
+              <span class="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-300">
+                <kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> navigate
+              </span>
+            </div>
+          </div>
+        </div>
+        <div id="email-list" class="flex-1 overflow-y-auto"></div>
+        <!-- Load More button for 300+ emails -->
+        <div id="load-more-wrap" class="hidden border-t border-slate-200 p-2.5">
+          <button id="btn-load-more" class="w-full rounded-xl bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all duration-200 cursor-pointer active:scale-[0.98]">
+            Load more emails...
           </button>
         </div>
-        <div class="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
-          <span id="count-label" class="rounded-full bg-slate-200/80 px-2 py-0.5 text-[11px] text-slate-700 font-bold">0 emails</span>
-          <span id="search-mode-indicator" class="text-[11px] text-slate-400">Header filter</span>
-        </div>
-      </div>
-      <div id="email-list" class="flex-1 overflow-y-auto divide-y divide-slate-100"></div>
-    </aside>
+      </aside>
 
-    <!-- Right Main: Reading Pane -->
-    <main id="email-viewer-pane" class="lg:col-span-8 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden scroll-mt-20">
-      <div id="email-header" class="border-b border-slate-200 p-4 sm:p-5 bg-slate-50/50 hidden">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="max-w-[65%] space-y-1">
-            <button id="btn-back-to-list" type="button" class="lg:hidden inline-flex items-center gap-1 text-xs text-blue-600 font-medium mb-1 cursor-pointer hover:underline">
-              ← Back to email list
-            </button>
-            <h2 id="view-subject" class="text-lg font-bold text-slate-900 tracking-tight break-words"></h2>
-            <p id="view-from" class="text-xs font-medium text-slate-600 break-words"></p>
-            <p id="view-date" class="text-[11px] text-slate-400"></p>
+      <!-- Right Main: Reading Pane -->
+      <main id="email-viewer-pane" class="lg:col-span-8 flex flex-col border border-slate-200 rounded-2xl bg-white h-[78vh] shadow-sm overflow-hidden scroll-mt-20">
+        <div id="email-header" class="border-b border-slate-200 p-4 sm:p-5 bg-gradient-to-r from-slate-50 to-white hidden">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="max-w-[65%] space-y-1.5">
+              <button id="btn-back-to-list" type="button" class="lg:hidden inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold mb-1 cursor-pointer hover:underline transition-colors">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                Back to list
+              </button>
+              <h2 id="view-subject" class="text-lg font-bold text-slate-900 tracking-tight break-words leading-snug"></h2>
+              <p id="view-from" class="text-xs font-medium text-slate-600 break-words"></p>
+              <p id="view-to" class="text-[11px] text-slate-500 break-words hidden"></p>
+              <p id="view-date" class="text-[11px] text-slate-400"></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-download-pdf" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 transition-all duration-200 cursor-pointer">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <span>Download PDF</span>
+              </button>
+              <button id="btn-download-eml" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:scale-95 transition-all duration-200 cursor-pointer">
+                <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span>Save .EML</span>
+              </button>
+              <button id="btn-remote-img" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 cursor-pointer">
+                <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span>Load Images</span>
+              </button>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="btn-download-pdf" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer">
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              <span>Download PDF</span>
-            </button>
-            <button id="btn-download-eml" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer">
-              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              <span>Save .EML</span>
-            </button>
-            <button id="btn-remote-img" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer">
-              <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              <span>Load Images</span>
-            </button>
+          <div id="attachments-bar" class="mt-3.5 flex flex-wrap gap-2"></div>
+        </div>
+        <div id="email-loading" class="hidden flex-1 flex items-center justify-center text-sm text-slate-400">
+          <div class="flex items-center gap-2.5">
+            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>Parsing message MIME stream...</span>
           </div>
         </div>
-        <div id="attachments-bar" class="mt-3.5 flex flex-wrap gap-2"></div>
-      </div>
-      <div id="email-loading" class="hidden flex-1 flex items-center justify-center text-sm text-slate-400">
-        <div class="flex items-center gap-2">
-          <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-          </svg>
-          <span>Parsing message MIME stream...</span>
-        </div>
-      </div>
-      <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white border-0"></iframe>
-    </main>
+        <iframe id="email-frame" sandbox="allow-modals" class="flex-1 w-full bg-white border-0"></iframe>
+      </main>
+    </div>
   </div>
 
   <!-- Ethical Disclosure -->
-  <div class="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
+  <div class="mt-8 pt-4 border-t border-slate-200 text-center text-[11px] text-slate-400">
     ViewMBOX is 100% tracker-free and does not serve behavioral ad network scripts on private email views.
   </div>
 </section>
@@ -309,20 +368,29 @@
   const progressLabel = document.getElementById('progress-label')!;
   const progressPct = document.getElementById('progress-pct')!;
   const progressDetails = document.getElementById('progress-details')!;
+  const dragOverlay = document.getElementById('drag-overlay')!;
 
   const searchProgressWrap = document.getElementById('search-progress-wrap')!;
   const searchProgressBar = document.getElementById('search-progress-bar')!;
   const searchProgressLabel = document.getElementById('search-progress-label')!;
   const searchBytesStat = document.getElementById('search-bytes-stat')!;
   const searchMatchesStat = document.getElementById('search-matches-stat')!;
+  const searchTimerStat = document.getElementById('search-timer-stat')!;
+  const searchEmailsStat = document.getElementById('search-emails-stat')!;
+  const searchSpeedStat = document.getElementById('search-speed-stat')!;
+  const sidebarLiveCounter = document.getElementById('sidebar-live-counter')!;
+  const sidebarCountText = document.getElementById('sidebar-count-text')!;
+  const sidebarTimerText = document.getElementById('sidebar-timer-text')!;
   const btnCancelSearch = document.getElementById('btn-cancel-search')!;
 
-  const viewer = document.getElementById('viewer')!;
+  const viewerWrapper = document.getElementById('viewer-wrapper')!;
   const emailList = document.getElementById('email-list')!;
   const searchInput = document.getElementById('search-input') as HTMLInputElement;
   const btnDeepSearch = document.getElementById('btn-deep-search')!;
   const countLabel = document.getElementById('count-label')!;
   const searchModeIndicator = document.getElementById('search-mode-indicator')!;
+  const loadMoreWrap = document.getElementById('load-more-wrap')!;
+  const btnLoadMore = document.getElementById('btn-load-more')!;
 
   const emailHeader = document.getElementById('email-header')!;
   const emailLoading = document.getElementById('email-loading')!;
@@ -336,6 +404,31 @@
   let selectedEmail: EmailIndexItem | null = null;
   let currentRenderedEmail: any = null;
   let isDeepSearching = false;
+  let displayedCount = 0;
+  const BATCH_SIZE = 200;
+
+  // Avatar colors keyed on first letter
+  const AVATAR_COLORS = [
+    'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500',
+    'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500', 'bg-red-500',
+    'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500',
+    'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500',
+    'bg-sky-500', 'bg-blue-600', 'bg-indigo-600', 'bg-violet-600',
+    'bg-purple-600', 'bg-fuchsia-600', 'bg-pink-600', 'bg-rose-600',
+    'bg-orange-600', 'bg-teal-600',
+  ];
+
+  function getAvatarColor(name: string): string {
+    const code = (name || 'U').charCodeAt(0);
+    return AVATAR_COLORS[code % AVATAR_COLORS.length];
+  }
+
+  function getInitials(from: string): string {
+    const clean = from.replace(/<[^>]*>/g, '').trim();
+    const parts = clean.split(/[\s.]+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return (clean[0] || 'U').toUpperCase();
+  }
 
   function escapeHtml(str: string): string {
     return (str || '')
@@ -367,32 +460,90 @@
 
   function renderList(items: EmailIndexItem[]) {
     visibleEmails = items;
+    displayedCount = Math.min(BATCH_SIZE, items.length);
     countLabel.textContent = `${items.length.toLocaleString()} emails`;
-    const slice = items.slice(0, 300);
+    countLabel.classList.add('badge-pop');
+    setTimeout(() => countLabel.classList.remove('badge-pop'), 300);
+    renderSlice(items, 0, displayedCount);
+    updateLoadMoreButton();
+  }
+
+  function renderSlice(items: EmailIndexItem[], start: number, end: number) {
+    if (items.length === 0) {
+      const q = searchInput.value.trim();
+      if (q) {
+        emailList.innerHTML = `
+          <div class="p-6 text-center text-slate-500">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3 ring-4 ring-slate-100/50">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p class="font-bold text-slate-900 text-sm">0 emails found</p>
+            <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+              No emails matching "${escapeHtml(q)}" were found in this archive.
+            </p>
+          </div>
+        `;
+      } else {
+        emailList.innerHTML = '<div class="p-6 text-center text-xs text-slate-400">No emails found in archive.</div>';
+      }
+      return;
+    }
+
+    const slice = items.slice(start, end);
     const frag = document.createDocumentFragment();
 
     for (const item of slice) {
       const btn = document.createElement('button');
       btn.className =
-        'w-full text-left p-3 hover:bg-blue-50 focus:bg-blue-50 transition cursor-pointer border-b border-slate-100 last:border-0';
+        'email-item w-full text-left p-3 hover:bg-blue-50/70 focus:bg-blue-50 transition-colors duration-150 cursor-pointer border-b border-slate-100/80 last:border-0 flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30';
       if (selectedEmail && selectedEmail.id === item.id) {
-        btn.classList.add('bg-blue-50', 'border-l-4', 'border-l-blue-600');
+        btn.classList.add('email-item-active');
       }
+
+      // Avatar circle
+      const initials = getInitials(item.from);
+      const colorClass = getAvatarColor(item.from);
+
       btn.innerHTML = `
-        <div class="truncate text-xs font-semibold text-slate-900"></div>
-        <div class="truncate text-[11px] text-slate-600 mt-0.5"></div>
-        <div class="truncate text-[10px] text-slate-400 mt-0.5"></div>
+        <div class="email-avatar ${colorClass} text-white shrink-0">${escapeHtml(initials)}</div>
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-[13px] font-semibold text-slate-900 leading-snug"></div>
+          <div class="truncate text-[11px] text-slate-600 mt-0.5"></div>
+          <div class="truncate text-[10px] text-slate-400 mt-0.5"></div>
+        </div>
       `;
-      btn.children[0].textContent = item.subject || '(No Subject)';
-      btn.children[1].textContent = item.from || '(Unknown Sender)';
-      btn.children[2].textContent = item.date || '';
+      const textContainer = btn.querySelector('.min-w-0')!;
+      textContainer.children[0].textContent = item.subject || '(No Subject)';
+      textContainer.children[1].textContent = item.from || '(Unknown Sender)';
+      textContainer.children[2].textContent = item.date || '';
       btn.onclick = () => requestRenderEmail(item, false, true);
       frag.appendChild(btn);
     }
 
-    emailList.innerHTML = '';
+    if (start === 0) {
+      emailList.innerHTML = '';
+    }
     emailList.appendChild(frag);
   }
+
+  function updateLoadMoreButton() {
+    if (displayedCount < visibleEmails.length) {
+      loadMoreWrap.classList.remove('hidden');
+      const remaining = visibleEmails.length - displayedCount;
+      btnLoadMore.textContent = `Load ${Math.min(BATCH_SIZE, remaining).toLocaleString()} more emails (${remaining.toLocaleString()} remaining)`;
+    } else {
+      loadMoreWrap.classList.add('hidden');
+    }
+  }
+
+  btnLoadMore.onclick = () => {
+    const prevCount = displayedCount;
+    displayedCount = Math.min(displayedCount + BATCH_SIZE, visibleEmails.length);
+    renderSlice(visibleEmails, prevCount, displayedCount);
+    updateLoadMoreButton();
+  };
 
   function requestRenderEmail(item: EmailIndexItem, allowRemoteImages: boolean, shouldScroll: boolean = false) {
     if (!currentFile || !worker) return;
@@ -400,7 +551,6 @@
     emailHeader.classList.add('hidden');
     emailLoading.classList.remove('hidden');
 
-    // Only scroll down to reading pane if explicitly requested by a user tap on mobile
     if (shouldScroll && window.innerWidth < 1024) {
       const pane = document.getElementById('email-viewer-pane');
       if (pane) {
@@ -428,12 +578,21 @@
     document.getElementById('view-from')!.textContent = `From: ${msg.from}`;
     document.getElementById('view-date')!.textContent = msg.date;
 
+    // Show To field if available
+    const viewTo = document.getElementById('view-to')!;
+    if (msg.to) {
+      viewTo.textContent = `To: ${msg.to}`;
+      viewTo.classList.remove('hidden');
+    } else {
+      viewTo.classList.add('hidden');
+    }
+
     attachmentsBar.innerHTML = '';
     for (const att of (msg.attachments as AttachmentMeta[]) || []) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className =
-        'rounded bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1';
+        'rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:border-slate-300 cursor-pointer flex items-center gap-1.5 transition-all duration-200 active:scale-95';
       btn.textContent = `📎 ${att.filename} (${formatBytes(att.size)})`;
       btn.onclick = () => downloadAttachment(att.id, att.filename);
       attachmentsBar.appendChild(btn);
@@ -460,7 +619,6 @@
     const blob = currentFile.slice(selectedEmail.start, selectedEmail.end, 'message/rfc822');
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    // Preserve Unicode characters (Japanese, Spanish, accents), strip only illegal file system characters
     const safeName = (selectedEmail.subject || 'email')
       .replace(/[/\\?%*:|"<>]+/g, '_')
       .replace(/\s+/g, '_')
@@ -472,20 +630,75 @@
     logStatus(`Downloaded EML: ${safeName}.eml`);
   }
 
+  let searchStartTime = 0;
+  let searchTimerInterval: any = null;
+  let lastReportedMatchesCount = 0;
+  let activeSearchId = 0;
+  let lastSearchQuery = '';
+  let lastSearchTimestamp = 0;
+
   function triggerDeepSearch() {
     const q = searchInput.value.trim();
     if (!q || !currentFile || !worker || allEmails.length === 0) return;
 
+    // Debounce duplicate invocations within 400ms (e.g. rapid taps or simultaneous submit events)
+    const now = performance.now();
+    if (q === lastSearchQuery && isDeepSearching && (now - lastSearchTimestamp) < 400) {
+      return;
+    }
+    lastSearchQuery = q;
+    lastSearchTimestamp = now;
+
+    // Cancel any in-flight search
+    if (isDeepSearching) {
+      worker.postMessage({ type: 'ABORT' });
+      clearInterval(searchTimerInterval);
+    }
+
+    activeSearchId++;
+    const thisSearchId = activeSearchId;
     isDeepSearching = true;
-    searchModeIndicator.textContent = 'Deep Body Search';
+    searchStartTime = performance.now();
+    lastReportedMatchesCount = 0;
+
+    searchModeIndicator.textContent = 'Searching...';
+    countLabel.textContent = 'Searching...';
     searchProgressWrap.classList.remove('hidden');
     searchProgressBar.style.width = '0%';
-    searchBytesStat.textContent = `0 MB / ${formatBytes(currentFile.size)} scanned`;
+    searchProgressLabel.textContent = `Searching for "${q}"...`;
+    searchTimerStat.textContent = '0.0s';
+    searchEmailsStat.textContent = `Checked 0 / ${allEmails.length.toLocaleString()} emails`;
+    searchBytesStat.textContent = `0 MB / ${formatBytes(currentFile.size)}`;
+    searchSpeedStat.textContent = '0 MB/s';
     searchMatchesStat.textContent = '0 matches';
 
-    logStatus(`Initiated deep body search for "${q}"...`);
+    sidebarLiveCounter.classList.remove('hidden');
+    sidebarCountText.textContent = `0 / ${allEmails.length.toLocaleString()}`;
+    sidebarTimerText.textContent = '0.0s';
+
+    // Show searching state in list
+    emailList.innerHTML = `
+      <div class="p-8 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-2.5">
+        <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span class="font-medium text-slate-700">Searching archive...</span>
+        <span class="text-[11px] text-slate-400">Scanning headers and email bodies</span>
+      </div>
+    `;
+
+    clearInterval(searchTimerInterval);
+    searchTimerInterval = setInterval(() => {
+      const elapsed = ((performance.now() - searchStartTime) / 1000).toFixed(1);
+      searchTimerStat.textContent = `${elapsed}s`;
+      sidebarTimerText.textContent = `${elapsed}s`;
+    }, 100);
+
+    logStatus(`Initiated deep body search for "${q}" [session #${thisSearchId}]...`);
     worker.postMessage({
       type: 'DEEP_SEARCH',
+      searchSessionId: thisSearchId,
       file: currentFile,
       query: q,
       items: allEmails,
@@ -493,12 +706,39 @@
   }
 
   function cancelDeepSearch() {
+    activeSearchId++;
     if (!worker) return;
     worker.postMessage({ type: 'ABORT' });
     isDeepSearching = false;
+    clearInterval(searchTimerInterval);
     searchProgressWrap.classList.add('hidden');
-    searchModeIndicator.textContent = 'Header filter';
-    logStatus('Deep search cancelled.');
+    sidebarLiveCounter.classList.add('hidden');
+    searchModeIndicator.textContent = 'All emails';
+    renderList(allEmails);
+    logStatus('Search cancelled.');
+  }
+
+  // BUG FIX: PDF generation now delegates to worker (non-blocking)
+  function downloadEmailPdf() {
+    if (!currentRenderedEmail) {
+      showError('Please select an email first before downloading PDF.');
+      return;
+    }
+    if (!worker) {
+      showError('Worker not available.');
+      return;
+    }
+
+    logStatus(`Generating PDF for "${currentRenderedEmail.subject}"...`);
+    worker.postMessage({
+      type: 'GENERATE_PDF',
+      subject: currentRenderedEmail.subject,
+      from: currentRenderedEmail.from,
+      to: currentRenderedEmail.to,
+      date: currentRenderedEmail.date,
+      text: currentRenderedEmail.text,
+      inlineImages: currentRenderedEmail.inlineImages || [],
+    });
   }
 
   async function handleFile(file: File) {
@@ -528,7 +768,6 @@
       selectedEmail = null;
       currentRenderedEmail = null;
 
-      // Transform upload area to Active Archive state
       dropzoneEmpty.classList.add('hidden');
       dropzoneActive.classList.remove('hidden');
       activeFileName.textContent = file.name;
@@ -536,7 +775,7 @@
       activeFileStat.textContent = formatBytes(file.size);
 
       progressWrap.classList.remove('hidden');
-      viewer.classList.remove('hidden');
+      viewerWrapper.classList.remove('hidden');
       progressBar.style.width = '0%';
       progressLabel.textContent = `Scanning ${file.name} (${formatBytes(file.size)})...`;
 
@@ -566,10 +805,14 @@
           progressLabel.textContent = `Indexing headers (${allEmails.length.toLocaleString()})...`;
           progressPct.textContent = `${msg.percent}%`;
           progressBar.style.width = `${msg.percent}%`;
-          if (allEmails.length <= 300) renderList(allEmails);
+          if (allEmails.length <= BATCH_SIZE) renderList(allEmails);
         } else if (msg.type === 'DONE') {
+          if (Array.isArray(msg.items) && msg.items.length > 0) {
+            allEmails = msg.items;
+          }
           progressWrap.classList.add('hidden');
           activeFileStat.textContent = `${formatBytes(file.size)} • ${allEmails.length.toLocaleString()} emails indexed`;
+          searchModeIndicator.textContent = 'All emails';
           renderList(allEmails);
           logStatus(`Done! Indexed ${allEmails.length.toLocaleString()} emails.`);
           if (allEmails.length > 0) requestRenderEmail(allEmails[0], false);
@@ -596,23 +839,71 @@
           a.download = `${cleanName}.pdf`;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
-          logStatus(`PDF downloaded to Downloads folder: ${cleanName}.pdf`);
+          logStatus(`PDF downloaded: ${cleanName}.pdf`);
         } else if (msg.type === 'PDF_ERROR') {
           showError('PDF generation failed: ' + msg.message);
         } else if (msg.type === 'SEARCH_PROGRESS') {
+          if (msg.searchSessionId && msg.searchSessionId !== activeSearchId) return;
+
+          const elapsedSec = Math.max(0.05, (performance.now() - searchStartTime) / 1000);
+          const mbScanned = msg.scannedBytes / (1024 * 1024);
+          const mbPerSec = (mbScanned / elapsedSec).toFixed(1);
+
           searchProgressBar.style.width = `${msg.percent}%`;
-          searchBytesStat.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)} scanned (${msg.percent}%)`;
-          searchMatchesStat.textContent = `${msg.matchedIds.length} matches`;
-          const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
-          renderList(hits);
+          searchEmailsStat.textContent = `Checked ${msg.current.toLocaleString()} / ${msg.total.toLocaleString()} (${msg.percent}%)`;
+          searchBytesStat.textContent = `${formatBytes(msg.scannedBytes)} of ${formatBytes(msg.totalBytes)}`;
+          searchSpeedStat.textContent = `${mbPerSec} MB/s`;
+          searchMatchesStat.textContent = `${msg.matchedIds.length} match${msg.matchedIds.length === 1 ? '' : 'es'}`;
+          sidebarCountText.textContent = `Checked ${msg.current.toLocaleString()}/${msg.total.toLocaleString()} (${msg.matchedIds.length} hits)`;
+
+          // Avoid DOM thrashing: only re-render if new matches appeared!
+          if (msg.matchedIds.length !== lastReportedMatchesCount) {
+            lastReportedMatchesCount = msg.matchedIds.length;
+            const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
+            renderList(hits);
+          }
         } else if (msg.type === 'SEARCH_DONE') {
+          if (msg.searchSessionId && msg.searchSessionId !== activeSearchId) return;
+
           isDeepSearching = false;
-          searchProgressWrap.classList.add('hidden');
+          clearInterval(searchTimerInterval);
+          const totalElapsed = ((performance.now() - searchStartTime) / 1000).toFixed(2);
+          const totalMB = currentFile ? currentFile.size / (1024 * 1024) : 0;
+          const avgSpeed = (totalMB / Math.max(0.01, parseFloat(totalElapsed))).toFixed(1);
+
+          searchTimerStat.textContent = `${totalElapsed}s`;
+          searchEmailsStat.textContent = `Finished ${allEmails.length.toLocaleString()} emails`;
+          searchSpeedStat.textContent = `${avgSpeed} MB/s avg`;
+          searchProgressLabel.textContent = `Search Complete (${totalElapsed}s • ${avgSpeed} MB/s)`;
+          sidebarLiveCounter.classList.add('hidden');
+
           const hits = allEmails.filter((m) => msg.matchedIds.includes(m.id));
           renderList(hits);
-          logStatus(`Search complete: ${hits.length} matching emails found.`);
+          searchModeIndicator.textContent = hits.length === 1 ? '1 result' : `${hits.length.toLocaleString()} results`;
+          if (hits.length > 0) {
+            requestRenderEmail(hits[0], false, false);
+          } else {
+            selectedEmail = null;
+            currentRenderedEmail = null;
+            emailHeader.classList.add('hidden');
+            emailFrame.srcdoc = `
+              <!DOCTYPE html>
+              <html>
+                <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 80vh; color: #94a3b8; text-align: center; margin: 0;">
+                  <div>
+                    <div style="font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 4px;">No email selected</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Select an email from the search results to read its contents.</div>
+                  </div>
+                </body>
+              </html>
+            `;
+          }
+          logStatus(`Search complete: ${hits.length} matching emails found in ${totalElapsed}s (${avgSpeed} MB/s).`);
         } else if (msg.type === 'SEARCH_ABORTED') {
+          if (msg.searchSessionId && msg.searchSessionId !== activeSearchId) return;
           isDeepSearching = false;
+          clearInterval(searchTimerInterval);
+          sidebarLiveCounter.classList.add('hidden');
           searchProgressWrap.classList.add('hidden');
         } else if (msg.type === 'ERROR') {
           showError(msg.message);
@@ -627,13 +918,11 @@
     }
   }
 
-  // Button to choose another file
   btnUploadAnother.onclick = () => {
     fileInput.value = '';
     fileInput.click();
   };
 
-  // Native File Input change
   fileInput.onchange = () => {
     logStatus('File picker selected a file.');
     const f = fileInput.files?.[0];
@@ -644,11 +933,48 @@
     }
   };
 
-  // Drag and Drop (desktop / tablet)
+  // BUG FIX: Full-page drag/drop support (not just the small label)
+  let dragCounter = 0;
+
+  document.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (dragCounter === 1) {
+      dragOverlay.classList.remove('hidden');
+    }
+  });
+
+  document.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      dragOverlay.classList.add('hidden');
+    }
+  });
+
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    dragOverlay.classList.add('hidden');
+    const f = e.dataTransfer?.files?.[0];
+    if (f) {
+      logStatus('File dropped: ' + f.name);
+      handleFile(f);
+    }
+  });
+
+  // Also keep the dropzone-specific handlers for click-to-browse
   const dropzone = document.getElementById('dropzone')!;
   dropzone.ondragover = (e) => e.preventDefault();
   dropzone.ondrop = (e) => {
     e.preventDefault();
+    dragCounter = 0;
+    dragOverlay.classList.add('hidden');
     const f = e.dataTransfer?.files?.[0];
     if (f) {
       logStatus('File dropped onto dropzone: ' + f.name);
@@ -659,6 +985,8 @@
   dropzoneActive.ondragover = (e) => e.preventDefault();
   dropzoneActive.ondrop = (e) => {
     e.preventDefault();
+    dragCounter = 0;
+    dragOverlay.classList.add('hidden');
     const f = e.dataTransfer?.files?.[0];
     if (f) {
       logStatus('File dropped onto active dropzone: ' + f.name);
@@ -666,281 +994,42 @@
     }
   };
 
-  // Instant Header Filter on keystroke
+  // Search input handling: keep email list and count intact while typing or pasting.
+  // "0 emails" and search results will only appear once the user actually runs the search (Enter / 🔍).
   searchInput.oninput = () => {
-    if (isDeepSearching) cancelDeepSearch();
-    const q = searchInput.value.trim().toLowerCase();
-    searchModeIndicator.textContent = 'Header filter';
-    if (!q) return renderList(allEmails);
-    const filtered = allEmails.filter(
-      (m) =>
-        m.subject.toLowerCase().includes(q) ||
-        m.from.toLowerCase().includes(q) ||
-        m.date.toLowerCase().includes(q)
-    );
-    renderList(filtered);
+    const q = searchInput.value.trim();
+    if (!q) {
+      if (isDeepSearching) cancelDeepSearch();
+      searchModeIndicator.textContent = 'All emails';
+      renderList(allEmails);
+      return;
+    }
+    if (!isDeepSearching) {
+      searchModeIndicator.textContent = 'Press Enter to search';
+    }
   };
 
-  // Enter triggers Deep Body Search
+  // Escape cancels search
   searchInput.onkeydown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      triggerDeepSearch();
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Escape') {
       cancelDeepSearch();
     }
   };
 
-  btnDeepSearch.onclick = () => triggerDeepSearch();
+  // Form submission (handles both Enter key and clicking 🔍 Search button cleanly without double-trigger)
+  const searchForm = document.getElementById('search-form') as HTMLFormElement;
+  if (searchForm) {
+    searchForm.onsubmit = (e) => {
+      e.preventDefault();
+      triggerDeepSearch();
+    };
+  }
+
   btnCancelSearch.onclick = () => cancelDeepSearch();
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isDeepSearching) cancelDeepSearch();
   });
-
-  async function downloadEmailPdf() {
-    if (!currentRenderedEmail) {
-      showError('Please select an email first before downloading PDF.');
-      return;
-    }
-
-    logStatus(`Rendering A4 Portrait PDF for "${currentRenderedEmail.subject}"...`);
-
-    try {
-      const { PDFDocument } = await import('pdf-lib');
-      const pdfDoc = await PDFDocument.create();
-
-      // Standard ISO A4 dimensions (150 DPI for crisp typography & light file size)
-      const A4_W = 1240;
-      const A4_H = 1754;
-      const marginX = 90;
-      const marginTop = 90;
-      const marginBottom = 90;
-      const contentWidth = A4_W - marginX * 2;
-
-      function createA4PageCanvas(): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
-        const c = document.createElement('canvas');
-        c.width = A4_W;
-        c.height = A4_H;
-        const ctx = c.getContext('2d')!;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, A4_W, A4_H);
-        return { canvas: c, ctx };
-      }
-
-      const pages: HTMLCanvasElement[] = [];
-      let { canvas, ctx } = createA4PageCanvas();
-      pages.push(canvas);
-
-      let y = marginTop;
-
-      function checkPageBreak(neededHeight: number) {
-        if (y + neededHeight > A4_H - marginBottom) {
-          const next = createA4PageCanvas();
-          canvas = next.canvas;
-          ctx = next.ctx;
-          pages.push(canvas);
-          y = marginTop;
-        }
-      }
-
-      // 1. Subject (Bold 34px)
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 34px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const subWords = (currentRenderedEmail.subject || '(No Subject)').split(' ');
-      let subLine = '';
-      for (const w of subWords) {
-        const testLine = subLine ? subLine + ' ' + w : w;
-        if (ctx.measureText(testLine).width > contentWidth && subLine) {
-          checkPageBreak(44);
-          ctx.fillText(subLine, marginX, y);
-          y += 44;
-          subLine = w;
-        } else {
-          subLine = testLine;
-        }
-      }
-      if (subLine) {
-        checkPageBreak(44);
-        ctx.fillText(subLine, marginX, y);
-        y += 44;
-      }
-      y += 10;
-
-      // 2. Metadata lines (20px, #475569)
-      ctx.fillStyle = '#475569';
-      ctx.font = '20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const metaLines = [
-        `From: ${currentRenderedEmail.from || 'Unknown'}`,
-        currentRenderedEmail.to ? `To: ${currentRenderedEmail.to}` : null,
-        `Date: ${currentRenderedEmail.date || 'Unknown'}`,
-      ].filter(Boolean) as string[];
-
-      for (const m of metaLines) {
-        checkPageBreak(30);
-        ctx.fillText(m, marginX, y);
-        y += 30;
-      }
-      y += 15;
-
-      // 3. Divider Line
-      checkPageBreak(25);
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(marginX, y);
-      ctx.lineTo(A4_W - marginX, y);
-      ctx.stroke();
-      y += 35;
-
-      // 4. Inline Logos / Images (e.g. Cloud Billing logo)
-      const inlineImages = (currentRenderedEmail.inlineImages || []) as { name: string; mimeType: string; bytes: any }[];
-      for (const imgData of inlineImages) {
-        try {
-          if (!imgData || !imgData.bytes) continue;
-          let rawBytes: Uint8Array;
-          if (imgData.bytes instanceof Uint8Array) {
-            rawBytes = imgData.bytes;
-          } else if (imgData.bytes instanceof ArrayBuffer) {
-            rawBytes = new Uint8Array(imgData.bytes);
-          } else if (ArrayBuffer.isView(imgData.bytes)) {
-            rawBytes = new Uint8Array(imgData.bytes.buffer, imgData.bytes.byteOffset, imgData.bytes.byteLength);
-          } else if (typeof imgData.bytes === 'object') {
-            rawBytes = new Uint8Array(Object.values(imgData.bytes));
-          } else {
-            continue;
-          }
-          if (rawBytes.byteLength === 0) continue;
-
-          const blob = new Blob([rawBytes], { type: imgData.mimeType || 'image/png' });
-          const imgUrl = URL.createObjectURL(blob);
-          const img = new Image();
-          await new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve;
-            img.src = imgUrl;
-          });
-
-          if (img.naturalWidth && img.naturalHeight) {
-            let drawW = img.naturalWidth;
-            let drawH = img.naturalHeight;
-            const maxW = Math.min(350, contentWidth);
-            const maxH = 120;
-            if (drawW > maxW) {
-              drawH = drawH * (maxW / drawW);
-              drawW = maxW;
-            }
-            if (drawH > maxH) {
-              drawW = drawW * (maxH / drawH);
-              drawH = maxH;
-            }
-
-            checkPageBreak(drawH + 30);
-            ctx.drawImage(img, marginX, y, drawW, drawH);
-            y += drawH + 30;
-          }
-          URL.revokeObjectURL(imgUrl);
-        } catch (imgErr) {
-          console.warn('[Canvas] Logo draw error:', imgErr);
-        }
-      }
-
-      // 5. Body Text (22px font, line-height 36px, #1e293b)
-      ctx.fillStyle = '#1e293b';
-      ctx.font = '22px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const lineHeight = 36;
-      const rawBody = (currentRenderedEmail.text || 'No text content available.')
-        .replace(/\r\n/g, '\n')
-        .replace(/\t/g, '    ');
-      const lines = rawBody.split('\n');
-
-      for (const rawLine of lines) {
-        if (!rawLine.trim()) {
-          y += 18;
-          checkPageBreak(lineHeight);
-          continue;
-        }
-
-        // Detect CJK characters (Japanese / Chinese / Korean wrap character-by-character)
-        const isCjk = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(rawLine);
-
-        if (isCjk) {
-          let curLine = '';
-          for (const char of rawLine) {
-            const testLine = curLine + char;
-            if (ctx.measureText(testLine).width > contentWidth && curLine) {
-              checkPageBreak(lineHeight);
-              ctx.fillText(curLine, marginX, y);
-              y += lineHeight;
-              curLine = char;
-            } else {
-              curLine = testLine;
-            }
-          }
-          if (curLine) {
-            checkPageBreak(lineHeight);
-            ctx.fillText(curLine, marginX, y);
-            y += lineHeight;
-          }
-        } else {
-          const words = rawLine.split(' ');
-          let curLine = '';
-          for (const w of words) {
-            const testLine = curLine ? curLine + ' ' + w : w;
-            if (ctx.measureText(testLine).width > contentWidth && curLine) {
-              checkPageBreak(lineHeight);
-              ctx.fillText(curLine, marginX, y);
-              y += lineHeight;
-              curLine = w;
-            } else {
-              curLine = testLine;
-            }
-          }
-          if (curLine) {
-            checkPageBreak(lineHeight);
-            ctx.fillText(curLine, marginX, y);
-            y += lineHeight;
-          }
-        }
-      }
-
-      // 6. Assemble into Portrait A4 PDF pages (595.28 x 841.89 pt)
-      for (const pageCanvas of pages) {
-        const pngDataUrl = pageCanvas.toDataURL('image/png');
-        const base64Data = pngDataUrl.split(',')[1];
-        const binaryStr = atob(base64Data);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-        const embeddedImg = await pdfDoc.embedPng(bytes);
-        const pdfPage = pdfDoc.addPage([595.28, 841.89]); // Strict Portrait A4
-        pdfPage.drawImage(embeddedImg, {
-          x: 0,
-          y: 0,
-          width: 595.28,
-          height: 841.89,
-        });
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safeName = (currentRenderedEmail.subject || 'email')
-        .replace(/[/\\?%*:|"<>]+/g, '_')
-        .replace(/\s+/g, '_')
-        .slice(0, 60);
-      a.href = url;
-      a.download = `${safeName}.pdf`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-      logStatus(`Downloaded A4 Portrait PDF: ${safeName}.pdf`);
-    } catch (err: any) {
-      showError(`PDF generation failed: ${err?.message || String(err)}`);
-    }
-  }
 
   document.getElementById('btn-remote-img')!.onclick = () => {
     if (selectedEmail) requestRenderEmail(selectedEmail, true, false);
@@ -961,4 +1050,33 @@
       }
     };
   }
+
+  // Keyboard navigation: ↑/↓ to browse emails, j/k vim-style
+  document.addEventListener('keydown', (e) => {
+    const targetTag = (document.activeElement?.tagName || '').toUpperCase();
+    if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || (document.activeElement as HTMLElement)?.isContentEditable) return;
+    if (visibleEmails.length === 0) return;
+
+    let direction = 0;
+    if (e.key === 'ArrowDown' || e.key === 'j') direction = 1;
+    if (e.key === 'ArrowUp' || e.key === 'k') direction = -1;
+    if (direction === 0) return;
+
+    e.preventDefault();
+    const currentIdx = selectedEmail
+      ? visibleEmails.findIndex((m) => m.id === selectedEmail!.id)
+      : -1;
+    const nextIdx = Math.max(0, Math.min(visibleEmails.length - 1, currentIdx + direction));
+    const nextEmail = visibleEmails[nextIdx];
+    if (nextEmail && nextEmail.id !== selectedEmail?.id) {
+      requestRenderEmail(nextEmail, false, false);
+      // Scroll list item into view
+      const listButtons = emailList.querySelectorAll('.email-item');
+      if (listButtons[nextIdx]) {
+        listButtons[nextIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+      // Re-render list to update highlight
+      renderList(visibleEmails);
+    }
+  });
 </script>
