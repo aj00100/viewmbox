@@ -13,17 +13,17 @@ const schema = {
       operatingSystem: 'Any (Web Browser)',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       description:
-        'Free 100% client-side MBOX viewer for 10GB+ Google Takeout, Thunderbird, and Apple Mail archives. Zero uploads, offline-safe.',
+        'Free 100% client-side MBOX viewer for large Google Takeout, Thunderbird, and Apple Mail archives. Zero uploads, offline-safe.',
     },
     {
       '@type': 'FAQPage',
       mainEntity: [
         {
           '@type': 'Question',
-          name: 'Can I open a 10GB Google Takeout MBOX file in my browser?',
+          name: 'Can I open large multi-gigabyte Google Takeout MBOX files in my browser?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes. ViewMBOX is built with an in-browser streaming engine that opens multi-gigabyte archives smoothly with zero uploads and zero memory strain.',
+            text: 'Yes. ViewMBOX is built with an in-browser 16MB streaming engine that opens multi-gigabyte archives smoothly with zero server uploads.',
           },
         },
         {
@@ -56,8 +56,8 @@ const schema = {
 };
 ---
 <BaseLayout
-  title="ViewMBOX — Free Online MBOX Viewer for 10GB+ Google Takeout Files"
-  description="Open and search 10GB+ Google Takeout, Thunderbird, and Apple Mail .mbox files directly in your browser. 100% local, offline-safe, zero file uploads."
+  title="ViewMBOX — Free Online MBOX Viewer for Large Google Takeout Files"
+  description="Open and search large Google Takeout, Thunderbird, and Apple Mail .mbox files directly in your browser. 100% local, offline-safe, zero file uploads."
   canonicalPath="/"
   schema={schema}
 >
@@ -82,7 +82,7 @@ const schema = {
     <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 max-w-4xl mx-auto leading-tight">
       Free Online MBOX Viewer <br class="hidden sm:inline" />
       <span class="gradient-text-animated">
-        for 10GB+ Google Takeout Files
+        for Large Google Takeout Files
       </span>
     </h1>
 
@@ -136,7 +136,7 @@ const schema = {
         </div>
         <h3 class="text-lg font-bold text-slate-900">Instant Local Indexing</h3>
         <p class="mt-2 text-sm text-slate-600 leading-relaxed">
-          ViewMBOX scans email boundaries instantly on your device without loading the whole archive into system RAM. Even massive 10GB+ files index smoothly with zero browser lag.
+          ViewMBOX scans email boundaries instantly on your device without loading the whole archive into system RAM. Multi-gigabyte archives index smoothly without freezing your browser.
         </p>
       </div>
 
@@ -218,7 +218,7 @@ const schema = {
         </div>
         <h3 class="font-bold text-slate-900">Multi-Gigabyte File Support</h3>
         <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
-          Unlike generic viewers that crash on large archives, ViewMBOX uses an advanced streaming architecture designed to open 10GB+ files smoothly without freezing your device.
+          Unlike generic viewers that crash on large archives, ViewMBOX uses an advanced streaming architecture designed to stream multi-gigabyte archives in 16MB slices without freezing your device.
         </p>
       </div>
 
@@ -343,9 +343,9 @@ const schema = {
 
     <div class="space-y-4">
       <div class="card-hover rounded-2xl border border-slate-200 bg-white p-6 shadow-sm reveal">
-        <h3 class="text-base font-bold text-slate-900">Can I open a 10GB Google Takeout MBOX file in my browser?</h3>
+        <h3 class="text-base font-bold text-slate-900">Can I open large multi-gigabyte Google Takeout MBOX files in my browser?</h3>
         <p class="mt-2 text-sm text-slate-600 leading-relaxed">
-          Yes. Generic web viewers crash on files larger than 50MB because they attempt to load the entire archive at once into memory. ViewMBOX uses an advanced in-browser streaming engine that reads data on demand, keeping memory usage ultra-low regardless of file size.
+          Yes. Generic web viewers crash on files larger than 50MB because they attempt to load the entire archive at once into memory. ViewMBOX uses an advanced in-browser streaming engine that reads data on demand in 16MB slices without uploading your data to a server.
         </p>
       </div>
 
