@@ -20,7 +20,7 @@ export interface AttachmentMeta {
 
 const CHUNK_SIZE = 16 * 1024 * 1024; // 16 MB
 const OVERLAP = 64;
-const HEADER_SNIFF_BYTES = 3072; // 3 KB per email for fast sidebar index
+const HEADER_SNIFF_BYTES = 8192; // 8 KB sniff window for robust headers
 
 // Matches RFC 4155 / Gmail Takeout / Thunderbird "From <sender> <date>"
 const FROM_LINE_RE =
@@ -75,7 +75,11 @@ async function parseQuickHeaders(
 ): Promise<{ subject: string; from: string; date: string }> {
   const sliceEnd = Math.min(end, start + HEADER_SNIFF_BYTES);
   const buf = await file.slice(start, sliceEnd).arrayBuffer();
-  const text = latin1Decoder.decode(buf);
+  const subBytes = new Uint8Array(buf);
+  let text = utf8Decoder.decode(subBytes);
+  if (text.includes('\uFFFD')) {
+    text = latin1Decoder.decode(subBytes);
+  }
   const headerBlock = text.split(/\r?\n\r?\n/, 1)[0] || text;
 
   return {
@@ -137,14 +141,33 @@ function escapeHtml(str: string): string {
 function sniffHeaderFromBuffer(
   bytes: Uint8Array,
   localStart: number
-): { subject: string; from: string; date: string } {
+): { subject: string; from: string; date: string } | null {
   const sliceEnd = Math.min(bytes.length, localStart + HEADER_SNIFF_BYTES);
-  const text = latin1Decoder.decode(bytes.subarray(localStart, sliceEnd));
-  const headerBlock = text.split(/\r?\n\r?\n/, 1)[0] || text;
+  const subBytes = bytes.subarray(localStart, sliceEnd);
+  let text = utf8Decoder.decode(subBytes);
+  if (text.includes('\uFFFD')) {
+    text = latin1Decoder.decode(subBytes);
+  }
+  const delimMatch = /\r?\n\r?\n/.exec(text);
+
+  // If header end delimiter was NOT reached before hitting end of chunk bytes:
+  if (!delimMatch && sliceEnd === bytes.length) {
+    return null; // Signal truncation to fall back to file.slice
+  }
+
+  const headerBlock = delimMatch ? text.slice(0, delimMatch.index) : text;
+  const subject = extractHeader(headerBlock, 'Subject');
+  const from = extractHeader(headerBlock, 'From');
+  const date = extractHeader(headerBlock, 'Date');
+
+  if (!subject && !from && sliceEnd === bytes.length) {
+    return null;
+  }
+
   return {
-    subject: extractHeader(headerBlock, 'Subject') || '(No Subject)',
-    from: extractHeader(headerBlock, 'From') || '(Unknown Sender)',
-    date: extractHeader(headerBlock, 'Date') || '',
+    subject: subject || '(No Subject)',
+    from: from || '(Unknown Sender)',
+    date: date || '',
   };
 }
 
@@ -183,7 +206,7 @@ self.onmessage = async (e: MessageEvent) => {
         if (offset === 0 && bytes.length >= 5) {
           const headLine = utf8Decoder.decode(bytes.subarray(0, Math.min(120, bytes.length)));
           if (FROM_LINE_RE.test(headLine)) {
-            const meta = sniffHeaderFromBuffer(bytes, 0);
+            const meta = sniffHeaderFromBuffer(bytes, 0) || await parseQuickHeaders(file, 0, Math.min(fileSize, HEADER_SNIFF_BYTES));
             indexed.push({
               id: 0,
               start: 0,
@@ -216,11 +239,8 @@ self.onmessage = async (e: MessageEvent) => {
                 indexed[indexed.length - 1].end = absPos;
               }
 
-              let meta;
-              const available = bytes.length - (i + 1);
-              if (available >= 500) {
-                meta = sniffHeaderFromBuffer(bytes, i + 1);
-              } else {
+              let meta = sniffHeaderFromBuffer(bytes, i + 1);
+              if (!meta) {
                 meta = await parseQuickHeaders(file, absPos, Math.min(fileSize, absPos + HEADER_SNIFF_BYTES));
               }
 

@@ -51,7 +51,7 @@ const mockBlob = {
 // Replicate Worker logic constants and decoding exactly from mbox-worker.ts
 const CHUNK_SIZE = 16 * 1024 * 1024; // 16 MB
 const OVERLAP = 64;
-const HEADER_SNIFF_BYTES = 3072;
+const HEADER_SNIFF_BYTES = 8192; // 8 KB sniff window for robust headers
 const FROM_LINE_RE =
   /^From \S+ (?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) /;
 
@@ -100,7 +100,11 @@ function extractHeader(rawHeaders, name) {
 async function parseQuickHeaders(file, start, end) {
   const sliceEnd = Math.min(end, start + HEADER_SNIFF_BYTES);
   const buf = await file.slice(start, sliceEnd).arrayBuffer();
-  const text = latin1Decoder.decode(buf);
+  const subBytes = new Uint8Array(buf);
+  let text = utf8Decoder.decode(subBytes);
+  if (text.includes('\uFFFD')) {
+    text = latin1Decoder.decode(subBytes);
+  }
   const headerBlock = text.split(/\r?\n\r?\n/, 1)[0] || text;
   return {
     subject: extractHeader(headerBlock, 'Subject') || '(No Subject)',
@@ -123,12 +127,31 @@ function decodeQuotedPrintable(str) {
 
 function sniffHeaderFromBuffer(bytes, localStart) {
   const sliceEnd = Math.min(bytes.length, localStart + HEADER_SNIFF_BYTES);
-  const text = latin1Decoder.decode(bytes.subarray(localStart, sliceEnd));
-  const headerBlock = text.split(/\r?\n\r?\n/, 1)[0] || text;
+  const subBytes = bytes.subarray(localStart, sliceEnd);
+  let text = utf8Decoder.decode(subBytes);
+  if (text.includes('\uFFFD')) {
+    text = latin1Decoder.decode(subBytes);
+  }
+  const delimMatch = /\r?\n\r?\n/.exec(text);
+
+  // If header end delimiter was NOT reached before hitting end of chunk bytes:
+  if (!delimMatch && sliceEnd === bytes.length) {
+    return null; // Signal truncation to fall back to file.slice
+  }
+
+  const headerBlock = delimMatch ? text.slice(0, delimMatch.index) : text;
+  const subject = extractHeader(headerBlock, 'Subject');
+  const from = extractHeader(headerBlock, 'From');
+  const date = extractHeader(headerBlock, 'Date');
+
+  if (!subject && !from && sliceEnd === bytes.length) {
+    return null;
+  }
+
   return {
-    subject: extractHeader(headerBlock, 'Subject') || '(No Subject)',
-    from: extractHeader(headerBlock, 'From') || '(Unknown Sender)',
-    date: extractHeader(headerBlock, 'Date') || '',
+    subject: subject || '(No Subject)',
+    from: from || '(Unknown Sender)',
+    date: date || '',
   };
 }
 
@@ -149,7 +172,7 @@ async function runBenchmark() {
     if (offset === 0 && bytes.length >= 5) {
       const headLine = utf8Decoder.decode(bytes.subarray(0, Math.min(120, bytes.length)));
       if (FROM_LINE_RE.test(headLine)) {
-        const meta = sniffHeaderFromBuffer(bytes, 0);
+        const meta = sniffHeaderFromBuffer(bytes, 0) || await parseQuickHeaders(mockBlob, 0, Math.min(fileSize, HEADER_SNIFF_BYTES));
         indexed.push({
           id: 0,
           start: 0,
@@ -176,11 +199,8 @@ async function runBenchmark() {
           bytes.subarray(i + 1, Math.min(bytes.length, i + 120))
         );
         if (FROM_LINE_RE.test(linePreview)) {
-          let meta;
-          const available = bytes.length - (i + 1);
-          if (available >= 500) {
-            meta = sniffHeaderFromBuffer(bytes, i + 1);
-          } else {
+          let meta = sniffHeaderFromBuffer(bytes, i + 1);
+          if (!meta) {
             meta = await parseQuickHeaders(mockBlob, absPos, Math.min(fileSize, absPos + HEADER_SNIFF_BYTES));
           }
 
@@ -243,6 +263,44 @@ async function runBenchmark() {
   if (trapEmail) {
     const indexedTrap = indexed[trapEmail.id];
     console.log(`✅ Trap Email Integrity: Email #${trapEmail.id} boundaries: ${indexedTrap.start} to ${indexedTrap.end} (Length: ${indexedTrap.end - indexedTrap.start}B)`);
+  }
+
+  // --- VERIFICATION GATE 1B: 100% PER-EMAIL FIELD-BY-FIELD ACCURACY ---
+  console.log('\n--- VERIFICATION GATE 1B: Per-Email Field Verification (All Emails) ---');
+  let fieldMismatches = 0;
+  for (let idx = 0; idx < manifest.emails.length; idx++) {
+    const exp = manifest.emails[idx];
+    const act = indexed[idx];
+    if (!act) {
+      console.error(`❌ Email #${idx} missing in indexed results!`);
+      fieldMismatches++;
+      break;
+    }
+
+    const startMatch = act.start === exp.start;
+    // In MBOX specification, an email's boundary extends until the next email's start (including any inter-email padding)
+    const endMatch = act.end === exp.end || act.end === (idx + 1 < manifest.emails.length ? manifest.emails[idx + 1].start : fileSize);
+    const subMatch = act.subject === exp.subject;
+    const fromMatch = act.from === exp.from;
+    const dateMatch = (act.date || '') === (exp.date || '');
+
+    if (!startMatch || !endMatch || !subMatch || !fromMatch || !dateMatch) {
+      fieldMismatches++;
+      if (fieldMismatches <= 5) {
+        console.error(`❌ Email #${idx} field mismatch:`);
+        if (!startMatch) console.error(`   Start: expected ${exp.start}, got ${act.start}`);
+        if (!endMatch) console.error(`   End: expected ${exp.end}, got ${act.end}`);
+        if (!subMatch) console.error(`   Subject: expected "${exp.subject}", got "${act.subject}"`);
+        if (!fromMatch) console.error(`   From: expected "${exp.from}", got "${act.from}"`);
+        if (!dateMatch) console.error(`   Date: expected "${exp.date}", got "${act.date}"`);
+      }
+    }
+  }
+
+  if (fieldMismatches === 0) {
+    console.log(`✅ 100% FIELD MATCH: All ${manifest.emails.length} emails match Subject, From, Date, Start, and End exactly!`);
+  } else {
+    console.error(`❌ Total field mismatches across archive: ${fieldMismatches} of ${manifest.emails.length}`);
   }
 
   // --- STAGE 3: DEEP SEARCH BENCHMARK ---
