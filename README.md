@@ -3,11 +3,11 @@
 <div align="center">
 
 > **100% In-Browser Streaming MBOX & Google Takeout Viewer**  
-> Open, search, and export multi-gigabyte `.mbox` archives locally in your browser. Zero software to install, zero file uploads, 100% offline-safe.
+> Open, search, and export multi-gigabyte `.mbox` archives locally in your browser. Zero software to install, zero file uploads.
 
 [![Live App](https://img.shields.io/badge/Live%20App-viewmbox.pages.dev-blue?style=for-the-badge&logo=cloudflarepages&logoColor=white)](https://viewmbox.pages.dev)
 [![Architecture](https://img.shields.io/badge/Architecture-100%25%20Client--Side-brightgreen?style=for-the-badge)](https://viewmbox.pages.dev)
-[![Offline](https://img.shields.io/badge/Offline%20Ready-Airplane%20Mode-orange?style=for-the-badge)](https://viewmbox.pages.dev)
+[![Connection-Off](https://img.shields.io/badge/Connection--Off-Airplane%20Mode%20Tested-orange?style=for-the-badge)](https://viewmbox.pages.dev)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -44,9 +44,9 @@ flowchart LR
 
 | Feature | Generic Web Viewers | Cloud Converters (SaaS) | Desktop Clients (Thunderbird) | ViewMBOX |
 | :--- | :---: | :---: | :---: | :---: |
-| **Max File Size** | ⚠️ ~50 MB (V8 Heap Crash) | ⚠️ ~100 MB Limit | Huge Disk Sync | **✅ Unlimited (Tested 2GB+)** |
+| **Max File Size** | ⚠️ ~50 MB (V8 Heap Crash) | ⚠️ ~100 MB Limit | Huge Disk Sync | **Tested up to 2GB on Android Chrome** |
 | **Data Privacy** | ❌ May Upload | ❌ Sends Emails to Cloud | Local Storage | **✅ 100% In-Browser (Zero Uploads)** |
-| **Offline Operation** | ❌ Fails Offline | ❌ Requires Internet | Requires App Install | **✅ 100% Airplane Mode Ready** |
+| **Offline Operation** | ❌ Fails Offline | ❌ Requires Internet | Requires App Install | **Keeps working with connection off once loaded** |
 | **Spy Pixel Protection** | ❌ None | ❌ None | Complex Settings | **✅ Sandboxed CSP Isolation** |
 | **Setup Friction** | Zero | Account / Upload Queue | Bulky 200MB+ Install | **✅ Instant Drag-and-Drop** |
 | **Cost** | Ad-Laden / Broken | Paid Subscription | Open Source | **✅ Free Forever** |
@@ -55,9 +55,9 @@ flowchart LR
 
 ## 🚀 Key Capabilities
 
-- **16MB Windowed Streaming:** Scans archives in 16MB slices in a background Web Worker. Maintains a flat ~20MB RAM footprint whether parsing a 50MB file or a 20GB archive.
+- **16MB Windowed Streaming:** Scans archives in 16MB slices in a background Web Worker without loading the entire archive into memory at once.
 - **Zero Server Uploads:** 100% client-side execution. Your emails, attachments, and headers never leave your device.
-- **100% Offline Capability:** Operates completely offline without an active internet connection (verified in Airplane Mode).
+- **Connection-Off Continuity:** Keeps working after initial page load with your network connection turned off (tested with Airplane Mode on Android Chrome).
 - **Tracking Pixel Protection:** HTML emails render inside a sandboxed `<iframe>` with a strict Content Security Policy (`default-src 'none'; img-src data: blob:;`) blocking tracking beacons and external spy pixels by default.
 - **Dual-Engine PDF Export:** Export individual messages as visual archival PDFs (preserving email styling, tables, and brand logos) or clean vector PDFs.
 - **Attachment Extraction:** Extract images, PDFs, spreadsheets, and ZIP archives directly to your Downloads folder with one click.
@@ -86,10 +86,12 @@ All benchmarks measured live inside Google Chrome on a physical mobile device:
 
 | Archive Type | File Size | Emails Indexed | Ingestion Time | Throughput | Result |
 | :--- | :--- | :--- | :--- | :--- | :---: |
-| **Real Google Takeout** | 23.8 MB | 571 emails | 0.88 s | 27.0 MB/s | **Verified ✅** |
+| **Real Google Takeout Export** | 23.8 MB | 571 emails | 0.88 s | 27.0 MB/s | **Verified ✅** |
 | **Synthetic Stress Archive** | 500.0 MB | 3,778 emails | 11.80 s | 42.4 MB/s | **Verified ✅** |
-| **Synthetic Scaling Archive** | 2.00 GB | 16,134 emails | 44.36 s | 46.2 MB/s | **Verified ✅** |
-| **Airplane Mode (100% Offline)** | **2.00 GB** | **16,134 emails** | **44.36 s** | **46.2 MB/s** | **Verified ✅** |
+| **Synthetic Scaling Archive** | 2.00 GB | 16,134 emails | 44.36 s – 47.87 s | 42.8 – 46.2 MB/s | **Verified ✅** |
+| **Airplane Mode (After Load)** | **2.00 GB** | **16,134 emails** | **44.36 s** | **46.2 MB/s** | **Verified ✅** |
+
+> **Note on Scope:** Tested on 2.0GB synthetic archive and authentic 571-email Google Takeout export on Android Chrome. Keeps working with your connection off once the page has loaded. Desktop Chrome, Firefox, and Safari performance across larger tiers will be evaluated separately.
 
 ---
 
