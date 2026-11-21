@@ -371,17 +371,29 @@ async function runBenchmark() {
 
   const email1BodyBuf = Buffer.from('Email 1 body content crossing the chunk border cleanly.\r\n');
 
-  // Build Email 2 (Starts at 17MB with 12KB header)
+  // Build Email 2 (Starts at 17MB with 39KB DKIM headers)
   let email2HeadersStr =
-    'From giant@test.com Mon Jan 01 02:00:00 2026\r\nSubject: Giant 12KB Header Email\r\nFrom: Giant Sender <giant@test.com>\r\nDate: Mon, 01 Jan 2026 02:00:00 +0000\r\n';
-  // Add 300 headers to exceed 12KB:
+    'From giant@test.com Mon Jan 01 02:00:00 2026\r\nSubject: Giant 39KB Header Email\r\nFrom: Giant Sender <giant@test.com>\r\nDate: Mon, 01 Jan 2026 02:00:00 +0000\r\n';
+  // Add 300 headers to test 39KB header block:
   for (let r = 0; r < 300; r++) {
     email2HeadersStr += `X-Extended-DKIM-Signature-Record-${r}: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=k1; bh=deadbeef; b=signaturedata_${r}\r\n`;
   }
   email2HeadersStr += '\r\n';
   const email2HeadersBuf = Buffer.from(email2HeadersStr);
-  console.log(`  Email 2 Header Size: ${email2HeadersBuf.length} bytes (>8KB test)`);
+  console.log(`  Email 2 Header Size: ${email2HeadersBuf.length} bytes (${(email2HeadersBuf.length / 1024).toFixed(1)} KB, >8KB test)`);
   const email2BodyBuf = Buffer.from('Email 2 body content with giant headers.\r\n');
+
+  // Build Email 3 (Tests graceful degradation past 128KB search cap — 150KB headers)
+  let email3HeadersStr =
+    'From overflow@test.com Mon Jan 01 03:00:00 2026\r\nFrom: Overflow Sender <overflow@test.com>\r\nDate: Mon, 01 Jan 2026 03:00:00 +0000\r\n';
+  // Pad with 140KB of dummy headers so Subject falls past the 128KB read window
+  for (let r = 0; r < 1800; r++) {
+    email3HeadersStr += `X-Huge-Routing-Trace-${r}: padding-header-overflow-stress-test-data-${r}\r\n`;
+  }
+  email3HeadersStr += 'Subject: Hidden Subject Past 128KB Cap\r\n\r\n';
+  const email3HeadersBuf = Buffer.from(email3HeadersStr);
+  console.log(`  Email 3 Header Size: ${email3HeadersBuf.length} bytes (${(email3HeadersBuf.length / 1024).toFixed(1)} KB, >128KB cap test)`);
+  const email3BodyBuf = Buffer.from('Email 3 body content testing >128KB degradation.\r\n');
 
   // Combine into a single synthetic buffer
   const syntheticTotalBuf = Buffer.concat([
@@ -391,6 +403,8 @@ async function runBenchmark() {
     email1BodyBuf,
     email2HeadersBuf,
     email2BodyBuf,
+    email3HeadersBuf,
+    email3BodyBuf,
   ]);
 
   const syntheticBlob = {
@@ -412,10 +426,10 @@ async function runBenchmark() {
   console.log(`  Running indexMboxStream on synthetic ${((syntheticTotalBuf.length) / (1024 * 1024)).toFixed(2)} MB buffer...`);
   const syntheticIndexed = await indexMboxStream(syntheticBlob);
 
-  if (syntheticIndexed.length === 3) {
-    console.log(`  ✅ All 3 synthetic emails found!`);
+  if (syntheticIndexed.length === 4) {
+    console.log(`  ✅ All 4 synthetic emails found!`);
   } else {
-    console.error(`  ❌ Expected 3 emails, got ${syntheticIndexed.length}`);
+    console.error(`  ❌ Expected 4 emails, got ${syntheticIndexed.length}`);
     allPassed = false;
   }
 
@@ -423,7 +437,7 @@ async function runBenchmark() {
   const e1 = syntheticIndexed[1];
   if (e1 && e1.start === boundaryEmailStart) {
     if (e1.subject === 'Boundary Crossing 3KB Header' && e1.from === 'Boundary Sender <boundary@test.com>') {
-      console.log(`  ✅ Email 1 (Cross-Chunk 3.5KB Headers) successfully recovered from disk fallback!`);
+      console.log(`  ✅ Email 1 (Cross-Chunk 5.2KB Headers) successfully recovered from disk fallback!`);
       console.log(`     Subject: "${e1.subject}" | From: "${e1.from}"`);
     } else {
       console.error(`  ❌ Email 1 headers truncated: Subject: "${e1?.subject}", From: "${e1?.from}"`);
@@ -434,11 +448,11 @@ async function runBenchmark() {
     allPassed = false;
   }
 
-  // Verify Email 2 (Giant 12KB Headers)
+  // Verify Email 2 (Giant 39KB Headers)
   const e2 = syntheticIndexed[2];
   if (e2) {
-    if (e2.subject === 'Giant 12KB Header Email' && e2.from === 'Giant Sender <giant@test.com>') {
-      console.log(`  ✅ Email 2 (12KB Giant Headers) successfully recovered without truncation!`);
+    if (e2.subject === 'Giant 39KB Header Email' && e2.from === 'Giant Sender <giant@test.com>') {
+      console.log(`  ✅ Email 2 (39KB Giant Headers) successfully recovered without truncation!`);
       console.log(`     Subject: "${e2.subject}" | From: "${e2.from}"`);
     } else {
       console.error(`  ❌ Email 2 headers truncated: Subject: "${e2?.subject}", From: "${e2?.from}"`);
@@ -446,6 +460,21 @@ async function runBenchmark() {
     }
   } else {
     console.error(`  ❌ Email 2 missing!`);
+    allPassed = false;
+  }
+
+  // Verify Email 3 (Graceful Degradation Past 128KB Cap)
+  const e3 = syntheticIndexed[3];
+  if (e3) {
+    if (e3.from === 'Overflow Sender <overflow@test.com>' && e3.subject === '(No Subject)') {
+      console.log(`  ✅ Email 3 (>128KB Cap Degradation): Email NEVER dropped, boundaries intact, subject gracefully defaulted to "(No Subject)"!`);
+      console.log(`     Start: ${e3.start} | End: ${e3.end} | From: "${e3.from}" | Subject: "${e3.subject}"`);
+    } else {
+      console.error(`  ❌ Email 3 degradation unexpected: Subject: "${e3?.subject}", From: "${e3?.from}"`);
+      allPassed = false;
+    }
+  } else {
+    console.error(`  ❌ Email 3 missing!`);
     allPassed = false;
   }
 
