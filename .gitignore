@@ -5,3 +5,7 @@ dist/
 .env.*
 .DS_Store
 test-data/
+*.mbox
+*.zip
+*.eml
+*.tar*
