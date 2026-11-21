@@ -462,8 +462,8 @@ self.onmessage = async (e: MessageEvent) => {
           let targetH = dims.height;
           if (!targetW || !targetH) continue;
 
-          const maxW = Math.min(220, contentWidth);
-          const maxH = 70;
+          const maxW = Math.min(280, contentWidth);
+          const maxH = 90;
 
           if (targetW > maxW) {
             const ratio = maxW / targetW;
